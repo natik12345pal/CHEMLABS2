@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { memo, useCallback } from 'react';
 import { useChemLabStore } from '@/store/chemlab-store';
 import { 
   FlaskConical, 
@@ -16,6 +16,61 @@ import {
   Gauge,
   RotateCcw
 } from 'lucide-react';
+
+// Memoized nav button to prevent re-renders
+const NavButton = memo(function NavButton({ 
+  item, 
+  isActive, 
+  onClick 
+}: { 
+  item: { id: string; label: string; icon: React.ElementType };
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  const Icon = item.icon;
+  return (
+    <button
+      onClick={onClick}
+      className={`relative px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors touch-manipulation ${
+        isActive 
+          ? 'text-cyan-400 bg-cyan-500/15 border border-cyan-400/30' 
+          : 'text-slate-400 hover:text-cyan-300 hover:bg-cyan-500/10'
+      }`}
+    >
+      <Icon size={18} />
+      <span className="font-medium text-sm hidden sm:inline">{item.label}</span>
+    </button>
+  );
+});
+
+// Memoized control button
+const ControlButton = memo(function ControlButton({
+  onClick,
+  isActive,
+  activeColor,
+  title,
+  children
+}: {
+  onClick: () => void;
+  isActive?: boolean;
+  activeColor?: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`p-2 rounded-lg border transition-colors touch-manipulation ${
+        isActive 
+          ? `bg-${activeColor || 'cyan'}-500/20 border-${activeColor || 'cyan'}-400/50 text-${activeColor || 'cyan'}-400`
+          : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-cyan-300'
+      }`}
+      title={title}
+    >
+      {children}
+    </button>
+  );
+});
 
 export default function Navigation() {
   const {
@@ -39,144 +94,97 @@ export default function Navigation() {
     { id: 'about', label: 'About', icon: Info },
   ] as const;
 
+  const handleNavClick = useCallback((id: typeof navItems[number]['id']) => {
+    setActiveSection(id);
+  }, [setActiveSection]);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl bg-slate-900/80 border-b border-cyan-500/20">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl bg-slate-900/85 border-b border-cyan-500/20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
+        <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
-          >
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-emerald-400 flex items-center justify-center">
-              <span className="text-slate-900 font-bold text-xl">⚗</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-emerald-400 flex items-center justify-center">
+              <span className="text-slate-900 font-bold text-lg sm:text-xl">⚗</span>
             </div>
-            <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">
+            <span className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">
               ChemLab
             </span>
-          </motion.div>
+          </div>
 
-          {/* Navigation Links */}
+          {/* Navigation Links - Desktop */}
           <div className="hidden sm:flex items-center gap-1">
-            {navItems.map((item, index) => {
-              const Icon = item.icon;
-              const isActive = activeSection === item.id;
-              
-              return (
-                <motion.button
-                  key={item.id}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => setActiveSection(item.id)}
-                  className={`relative px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 touch-manipulation ${
-                    isActive 
-                      ? 'text-cyan-400' 
-                      : 'text-slate-400 hover:text-cyan-300 hover:bg-cyan-500/10'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span className="font-medium">{item.label}</span>
-                  
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeNav"
-                      className="absolute inset-0 bg-cyan-500/20 rounded-lg border border-cyan-400/30"
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                </motion.button>
-              );
-            })}
+            {navItems.map((item) => (
+              <NavButton
+                key={item.id}
+                item={item}
+                isActive={activeSection === item.id}
+                onClick={() => handleNavClick(item.id)}
+              />
+            ))}
           </div>
 
           {/* Controls */}
           <div className="flex items-center gap-1 sm:gap-2">
             {/* Zoom Controls - Desktop Only */}
-            <div className="hidden lg:flex items-center gap-1 mr-2 px-2 py-1 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div className="hidden lg:flex items-center gap-1 mr-1 sm:mr-2 px-2 py-1 rounded-lg bg-slate-800/50 border border-slate-700/50">
               <button
-                onClick={() => setZoomLevel(zoomLevel - 10)}
-                className="p-1.5 rounded hover:bg-slate-700/50 text-slate-400 hover:text-cyan-300 transition-colors"
+                onClick={() => setZoomLevel(Math.max(50, zoomLevel - 10))}
+                className="p-1 rounded hover:bg-slate-700/50 text-slate-400 hover:text-cyan-300 transition-colors"
                 title="Zoom Out"
               >
-                <ZoomOut size={16} />
+                <ZoomOut size={14} />
               </button>
-              <span className="text-xs text-slate-400 min-w-[3rem] text-center font-mono">
+              <span className="text-xs text-slate-400 min-w-[2.5rem] text-center font-mono">
                 {zoomLevel}%
               </span>
               <button
-                onClick={() => setZoomLevel(zoomLevel + 10)}
-                className="p-1.5 rounded hover:bg-slate-700/50 text-slate-400 hover:text-cyan-300 transition-colors"
+                onClick={() => setZoomLevel(Math.min(150, zoomLevel + 10))}
+                className="p-1 rounded hover:bg-slate-700/50 text-slate-400 hover:text-cyan-300 transition-colors"
                 title="Zoom In"
               >
-                <ZoomIn size={16} />
+                <ZoomIn size={14} />
               </button>
             </div>
 
             {/* Reset Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={resetExperiment}
-              className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-orange-400 hover:border-orange-400/30 transition-colors touch-manipulation"
-              title="Reset Experiment"
-            >
-              <RotateCcw size={18} />
-            </motion.button>
+            <ControlButton onClick={resetExperiment} title="Reset Experiment">
+              <RotateCcw size={16} />
+            </ControlButton>
 
             {/* Performance Mode */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={toggleLowPerformanceMode}
-              className={`p-2 rounded-lg border transition-colors touch-manipulation ${
-                isLowPerformanceMode
-                  ? 'bg-amber-500/20 border-amber-400/50 text-amber-400'
-                  : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-amber-400'
-              }`}
+            <ControlButton 
+              onClick={toggleLowPerformanceMode} 
+              isActive={isLowPerformanceMode}
+              activeColor="amber"
               title={isLowPerformanceMode ? 'Low Performance Mode ON' : 'Low Performance Mode OFF'}
             >
-              <Gauge size={18} />
-            </motion.button>
+              <Gauge size={16} />
+            </ControlButton>
 
             {/* Sound Toggle */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={toggleSound}
-              className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-cyan-300 transition-colors touch-manipulation"
-              title={isSoundEnabled ? 'Mute Sound' : 'Enable Sound'}
-            >
-              {isSoundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-            </motion.button>
+            <ControlButton onClick={toggleSound} title={isSoundEnabled ? 'Mute Sound' : 'Enable Sound'}>
+              {isSoundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </ControlButton>
 
             {/* Theme Toggle */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={toggleDarkMode}
-              className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-yellow-400 transition-colors touch-manipulation"
-              title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
-            >
-              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </motion.button>
+            <ControlButton onClick={toggleDarkMode} title={isDarkMode ? 'Light Mode' : 'Dark Mode'}>
+              {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+            </ControlButton>
 
             {/* Fullscreen */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={toggleFullscreen}
               className="hidden sm:block p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-emerald-400 transition-colors touch-manipulation"
               title="Toggle Fullscreen"
             >
-              <Maximize size={18} />
-            </motion.button>
+              <Maximize size={16} />
+            </button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        <div className="sm:hidden flex items-center justify-center gap-2 pb-3">
+        <div className="sm:hidden flex items-center justify-center gap-1 pb-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
@@ -184,14 +192,14 @@ export default function Navigation() {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`flex-1 py-2 rounded-lg flex flex-col items-center gap-1 transition-all touch-manipulation ${
+                onClick={() => handleNavClick(item.id)}
+                className={`flex-1 py-2 rounded-lg flex flex-col items-center gap-0.5 transition-colors touch-manipulation ${
                   isActive 
                     ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-400/30' 
-                    : 'text-slate-400 hover:text-cyan-300'
+                    : 'text-slate-400'
                 }`}
               >
-                <Icon size={20} />
+                <Icon size={18} />
                 <span className="text-xs font-medium">{item.label}</span>
               </button>
             );
