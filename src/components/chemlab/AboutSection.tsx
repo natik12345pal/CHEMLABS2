@@ -10,7 +10,6 @@ export default function AboutSection() {
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
 
   useEffect(() => {
-    // Skip mouse tracking in low performance mode
     if (isLowPerformanceMode) return;
     
     let rafId: number;
@@ -31,11 +30,10 @@ export default function AboutSection() {
     };
   }, [isLowPerformanceMode]);
 
-  // Memoize floating elements to prevent re-creation
   const floatingElements = useMemo(() => [
     { emoji: '🧪', left: 10, top: 20 },
-    { emoji: '⚗️', left: 80, top: 30 },
-    { emoji: '🔬', left: 50, top: 70 },
+    { emoji: '⚗️', left: 85, top: 25 },
+    { emoji: '🔬', left: 50, top: 75 },
   ], []);
 
   const features = useMemo(() => [
@@ -46,48 +44,52 @@ export default function AboutSection() {
   ], []);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-cyan-950 to-slate-900 overflow-hidden">
-      {/* Simplified Background */}
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-cyan-950 overflow-hidden">
+      {/* Background Effects */}
       {!isLowPerformanceMode && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Reduced floating elements from 15 to 5 */}
-          {[...Array(5)].map((_, i) => (
+          {/* Floating Atoms */}
+          {[...Array(6)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute"
-              initial={{
-                x: `${10 + i * 20}%`,
-                y: `${10 + i * 15}%`,
+              initial={{ x: `${10 + i * 16}%`, y: `${10 + i * 12}%` }}
+              animate={{ 
+                y: [null, `${5 + i * 8}%`, `${10 + i * 12}%`],
+                opacity: [0.15, 0.3, 0.15],
               }}
-              animate={{
-                y: [null, `${5 + i * 10}%`, `${10 + i * 15}%`],
-                opacity: [0.2, 0.4, 0.2],
-              }}
-              transition={{
-                duration: 8 + i * 2,
-                repeat: Infinity,
-                ease: 'easeInOut'
-              }}
+              transition={{ duration: 10 + i * 2, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <Atom 
-                size={30 + i * 10} 
-                className="text-cyan-400/15"
-              />
+              <Atom size={35 + i * 8} className="text-cyan-400/20" />
             </motion.div>
           ))}
 
-          {/* Reduced glowing orbs from 8 to 2 */}
+          {/* Mouse-following Glow Orbs */}
           {[...Array(2)].map((_, i) => (
             <div
               key={`orb-${i}`}
-              className="absolute rounded-full blur-3xl"
+              className="absolute rounded-full blur-[100px] transition-all duration-700"
               style={{
-                width: 200,
-                height: 200,
-                background: `radial-gradient(circle, ${i === 0 ? 'rgba(0,255,255,0.15)' : 'rgba(0,255,136,0.15)'} 0%, transparent 70%)`,
-                left: `${mousePosition.x + (i - 1) * 20}%`,
-                top: `${mousePosition.y + (i - 1) * 20}%`,
+                width: 300,
+                height: 300,
+                background: `radial-gradient(circle, ${i === 0 ? 'rgba(0,255,255,0.12)' : 'rgba(168,85,247,0.1)'} 0%, transparent 70%)`,
+                left: `${mousePosition.x + (i - 0.5) * 15}%`,
+                top: `${mousePosition.y + (i - 0.5) * 15}%`,
                 transform: 'translate(-50%, -50%)'
+              }}
+            />
+          ))}
+
+          {/* Particle dots */}
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={`dot-${i}`}
+              className="absolute w-1 h-1 rounded-full bg-cyan-400/30"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animation: `twinkle ${3 + Math.random() * 2}s infinite`,
+                animationDelay: `${Math.random() * 2}s`
               }}
             />
           ))}
@@ -95,113 +97,142 @@ export default function AboutSection() {
       )}
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-20">
-        {/* Logo */}
-        <div className="mb-8">
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-16">
+        {/* Animated Logo */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="mb-8"
+        >
+          <div className="relative w-28 h-28 sm:w-36 sm:h-36">
             {!isLowPerformanceMode && (
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
                 className="absolute inset-0"
               >
-                <Atom className="w-full h-full text-cyan-400/40" />
+                <Atom className="w-full h-full text-cyan-400/30" />
               </motion.div>
             )}
             <div className="absolute inset-0 flex items-center justify-center">
-              <FlaskConical className="w-10 h-10 sm:w-12 sm:h-12 text-cyan-400" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <FlaskConical className="w-7 h-7 sm:w-8 sm:h-8 text-slate-900" />
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Title */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 mb-6">
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-4xl sm:text-6xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-300 mb-4"
+        >
           ChemLab
-        </h1>
+        </motion.h1>
 
-        <p className="text-cyan-200/80 text-lg sm:text-xl mb-10 text-center max-w-2xl">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-cyan-200/70 text-lg sm:text-xl mb-10 text-center max-w-xl"
+        >
           Virtual Chemistry Laboratory for Schools, Teachers & Students
-        </p>
+        </motion.p>
 
         {/* About Card */}
-        <div className="relative max-w-2xl w-full">
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 rounded-2xl blur-xl" />
-          <div className="relative bg-slate-800/70 backdrop-blur-xl rounded-2xl border border-cyan-400/20 p-6 sm:p-10">
-            {/* Decorative Elements */}
-            <div className="absolute top-4 left-4 flex gap-2">
-              <div className="w-2 h-2 rounded-full bg-cyan-400" />
-              <div className="w-2 h-2 rounded-full bg-purple-400" />
-              <div className="w-2 h-2 rounded-full bg-pink-400" />
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="relative max-w-2xl w-full"
+        >
+          {/* Card Glow */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-xl opacity-60" />
+          
+          {/* Card Content */}
+          <div className="relative bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-cyan-400/20 p-6 sm:p-10 shadow-2xl shadow-cyan-500/5">
+            {/* Decorative Header */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-t-2xl" />
+            
+            {/* Corner Decorations */}
+            <div className="absolute top-4 left-4 flex gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/50" />
+              <div className="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-sm shadow-purple-400/50" />
+              <div className="w-2.5 h-2.5 rounded-full bg-pink-400 shadow-sm shadow-pink-400/50" />
             </div>
 
-            <Sparkles className="absolute top-6 right-6 text-yellow-400/40 w-5 h-5" />
+            <Sparkles className="absolute top-5 right-5 text-yellow-400/50 w-5 h-5" />
 
             {/* Main Text */}
-            <p className="text-lg sm:text-2xl text-slate-200 text-center mb-6">
+            <p className="text-xl sm:text-2xl text-slate-200 text-center mb-6 mt-4">
               This website is made by
             </p>
 
-            {/* Author Name */}
+            {/* Author Name with Enhanced Glow */}
             <div className="relative text-center mb-6">
-              <h2 className="relative text-3xl sm:text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400">
-                MR NATIK
+              {/* Animated Glow Background */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-64 h-16 bg-gradient-to-r from-cyan-500/30 via-purple-500/30 to-pink-500/30 blur-2xl animate-pulse" />
+              </div>
+              
+              {/* Name Text */}
+              <h2 className="relative text-4xl sm:text-5xl md:text-6xl font-bold">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-purple-300 to-pink-300 animate-text-shimmer bg-[length:200%_auto]">
+                  MR NATIK
+                </span>
               </h2>
             </div>
 
             {/* Subtitle */}
-            <p className="text-base sm:text-xl text-cyan-300/80 text-center mb-6">
+            <p className="text-base sm:text-lg text-cyan-300/70 text-center mb-8">
               Web.ai Co-owner
             </p>
 
-            {/* Features */}
+            {/* Features Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
               {features.map((item, i) => (
-                <div
+                <motion.div
                   key={i}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg bg-slate-700/30"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + i * 0.1 }}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-700/40 border border-slate-600/30 hover:border-cyan-400/30 transition-colors"
                 >
-                  <item.icon className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
-                  <span className="text-xs sm:text-sm text-slate-300">{item.label}</span>
-                </div>
+                  <item.icon className="w-6 h-6 text-cyan-400" />
+                  <span className="text-xs sm:text-sm text-slate-300 font-medium">{item.label}</span>
+                </motion.div>
               ))}
             </div>
 
             {/* Divider */}
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-4 mb-5">
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
-              <Heart className="w-4 h-4 text-pink-400" />
+              <Heart className="w-5 h-5 text-pink-400 fill-pink-400/30" />
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
             </div>
 
             {/* Footer Text */}
-            <p className="text-sm text-slate-400 text-center">
+            <p className="text-sm text-slate-400 text-center leading-relaxed">
               Designed for smart boards, classrooms, and students worldwide.
               <br />
-              Optimized for all devices and performance levels.
+              <span className="text-cyan-400/60">Optimized for all devices and performance levels.</span>
             </p>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Floating Elements - Reduced */}
+        {/* Floating Emojis */}
         {!isLowPerformanceMode && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             {floatingElements.map((item, i) => (
               <motion.div
                 key={i}
-                className="absolute text-2xl sm:text-3xl opacity-15"
-                style={{
-                  left: `${item.left}%`,
-                  top: `${item.top}%`
-                }}
-                animate={{
-                  y: [0, -15, 0],
-                  opacity: [0.1, 0.25, 0.1]
-                }}
-                transition={{
-                  duration: 6 + i,
-                  repeat: Infinity,
-                  ease: 'easeInOut'
-                }}
+                className="absolute text-3xl sm:text-4xl opacity-20"
+                style={{ left: `${item.left}%`, top: `${item.top}%` }}
+                animate={{ y: [0, -20, 0], opacity: [0.1, 0.3, 0.1] }}
+                transition={{ duration: 8 + i * 2, repeat: Infinity, ease: 'easeInOut' }}
               >
                 {item.emoji}
               </motion.div>
@@ -209,6 +240,22 @@ export default function AboutSection() {
           </div>
         )}
       </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes text-shimmer {
+          0% { background-position: 0% center; }
+          50% { background-position: 100% center; }
+          100% { background-position: 0% center; }
+        }
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.5); }
+        }
+        .animate-text-shimmer {
+          animation: text-shimmer 3s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
