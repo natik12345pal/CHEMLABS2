@@ -18,6 +18,7 @@ export interface WorkspaceBeaker {
   fillLevel: number;
   isAnimating: boolean;
   isCentered: boolean;
+  isExploding?: boolean;
 }
 
 export interface ReactionResult {
@@ -52,6 +53,7 @@ export interface LabState {
   reactionResult: ReactionResult | null;
   showReactionPanel: boolean;
   isPanelMinimized: boolean;
+  explodingBeakers: string[];
   
   // Settings
   temperature: number;
@@ -134,6 +136,7 @@ export const useChemLabStore = create<LabState>()(
       reactionResult: null,
       showReactionPanel: false,
       isPanelMinimized: false,
+      explodingBeakers: [],
       
       temperature: 25,
       experimentName: 'Untitled Experiment',
@@ -316,23 +319,61 @@ export const useChemLabStore = create<LabState>()(
         const state = get();
         if (!state.pendingReaction || !state.selectedBeaker) return;
         
-        const result: ReactionResult = {
-          reaction: state.pendingReaction,
-          timestamp: Date.now(),
-          beakerId: state.selectedBeaker
-        };
+        const reaction = state.pendingReaction;
+        const beakerId = state.selectedBeaker;
         
-        set({
-          isMixing: false,
-          mixProgress: 100,
-          pendingReaction: null,
-          reactionResult: result,
-          showReactionPanel: true,
-          isPanelMinimized: false
-        });
+        // Check if this is an explosion reaction (Na + H2O, K + H2O)
+        const isExplosionReaction = reaction.animationType === 'explosion' && 
+          reaction.effects.some(e => e.type === 'explosion');
         
-        // Unlock achievement
-        get().unlockAchievement('first-reaction');
+        if (isExplosionReaction) {
+          // Mark beaker as exploding
+          set((state) => ({
+            isMixing: false,
+            mixProgress: 100,
+            pendingReaction: null,
+            explodingBeakers: [...state.explodingBeakers, beakerId],
+            workspaceBeakers: state.workspaceBeakers.map((b) =>
+              b.id === beakerId ? { ...b, isExploding: true } : b
+            )
+          }));
+          
+          // Set reaction result after explosion animation
+          setTimeout(() => {
+            const result: ReactionResult = {
+              reaction,
+              timestamp: Date.now(),
+              beakerId
+            };
+            
+            set((state) => ({
+              reactionResult: result,
+              showReactionPanel: true,
+              isPanelMinimized: false,
+              explodingBeakers: state.explodingBeakers.filter(id => id !== beakerId)
+            }));
+            
+            get().unlockAchievement('first-explosion');
+          }, 1000);
+        } else {
+          // Normal reaction
+          const result: ReactionResult = {
+            reaction,
+            timestamp: Date.now(),
+            beakerId
+          };
+          
+          set({
+            isMixing: false,
+            mixProgress: 100,
+            pendingReaction: null,
+            reactionResult: result,
+            showReactionPanel: true,
+            isPanelMinimized: false
+          });
+          
+          get().unlockAchievement('first-reaction');
+        }
       },
       
       dismissReactionResult: () => set({
@@ -360,7 +401,8 @@ export const useChemLabStore = create<LabState>()(
         mixProgress: 0,
         reactionResult: null,
         showReactionPanel: false,
-        temperature: 25
+        temperature: 25,
+        explodingBeakers: []
       }),
       
       saveExperiment: () => {

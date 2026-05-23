@@ -1,10 +1,10 @@
 'use client';
 
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WorkspaceBeaker } from '@/store/chemlab-store';
+import { WorkspaceBeaker, useChemLabStore } from '@/store/chemlab-store';
 import { Chemical } from '@/data/chemicals';
-import { Trash2, Info, Droplets, X, Beaker } from 'lucide-react';
+import { Trash2, Info, Droplets, X, Beaker, Plus } from 'lucide-react';
 
 interface BeakerComponentProps {
   beaker: WorkspaceBeaker;
@@ -16,22 +16,21 @@ interface BeakerComponentProps {
   quantity: number;
   workspaceSize: { width: number; height: number };
   isMixing: boolean;
+  isExploding?: boolean;
 }
 
-// Floating mini-menu for hold interactions
+// Floating mini-menu
 function FloatingMenu({ 
   position, 
   onClose, 
   onInfo, 
   onRemove,
-  onAddChemical,
-  hasChemical 
+  hasChemical
 }: { 
   position: { x: number; y: number };
   onClose: () => void;
   onInfo: () => void;
   onRemove: () => void;
-  onAddChemical?: () => void;
   hasChemical: boolean;
 }) {
   return (
@@ -43,18 +42,6 @@ function FloatingMenu({
       style={{ left: position.x, top: position.y }}
     >
       <div className="p-1">
-        {/* Add Chemical Button */}
-        {hasChemical && onAddChemical && (
-          <button
-            onClick={() => { onAddChemical(); onClose(); }}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-500/20 text-emerald-400 transition-colors touch-manipulation"
-          >
-            <Droplets size={20} />
-            <span className="font-medium">Add Chemical</span>
-          </button>
-        )}
-        
-        {/* Info Button */}
         <button
           onClick={() => { onInfo(); onClose(); }}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-cyan-500/20 text-cyan-400 transition-colors touch-manipulation"
@@ -62,8 +49,6 @@ function FloatingMenu({
           <Info size={20} />
           <span className="font-medium">Info</span>
         </button>
-        
-        {/* Remove Button */}
         <button
           onClick={() => { onRemove(); onClose(); }}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/20 text-red-400 transition-colors touch-manipulation"
@@ -71,8 +56,6 @@ function FloatingMenu({
           <Trash2 size={20} />
           <span className="font-medium">Remove</span>
         </button>
-        
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 hover:bg-slate-700/50 text-slate-400 border-t border-slate-700 transition-colors touch-manipulation"
@@ -85,6 +68,234 @@ function FloatingMenu({
   );
 }
 
+// Glass Shatter Effect Component
+function GlassShatter() {
+  const shards = [
+    { x: -40, y: -30, rotation: -45, delay: 0 },
+    { x: 30, y: -40, rotation: 30, delay: 0.05 },
+    { x: -50, y: 20, rotation: 60, delay: 0.1 },
+    { x: 40, y: 30, rotation: -20, delay: 0.15 },
+    { x: 0, y: -50, rotation: 90, delay: 0.05 },
+    { x: -30, y: 50, rotation: -60, delay: 0.1 },
+    { x: 50, y: 0, rotation: 45, delay: 0.15 },
+    { x: 20, y: 60, rotation: 15, delay: 0.2 },
+  ];
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {shards.map((shard, i) => (
+        <motion.div
+          key={i}
+          initial={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
+          animate={{
+            x: shard.x * 3,
+            y: shard.y * 3 + 100,
+            rotate: shard.rotation * 3,
+            opacity: 0
+          }}
+          transition={{ duration: 0.8, ease: 'easeOut', delay: shard.delay }}
+          className="absolute w-6 h-8 bg-gradient-to-br from-white/40 to-cyan-200/30"
+          style={{
+            clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+            backdropFilter: 'blur(2px)'
+          }}
+        />
+      ))}
+      {/* Explosion flash */}
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0.8 }}
+        animate={{ scale: 3, opacity: 0 }}
+        transition={{ duration: 0.4 }}
+        className="absolute w-24 h-24 rounded-full"
+        style={{ 
+          background: 'radial-gradient(circle, rgba(255,255,200,0.95) 0%, rgba(255,165,0,0.9) 40%, transparent 70%)',
+        }}
+      />
+    </div>
+  );
+}
+
+// Tap/Dispenser Component - properly centered above any container
+function TapDispenser({ 
+  chemical, 
+  isPouring
+}: { 
+  chemical: Chemical;
+  isPouring: boolean;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      className="absolute left-1/2 -translate-x-1/2 -top-28 z-30 pointer-events-none"
+    >
+      {/* Dispenser/Tap SVG */}
+      <svg width="80" height="100" viewBox="0 0 80 100" className="mx-auto block">
+        <defs>
+          <linearGradient id="tapMetalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#555" />
+            <stop offset="50%" stopColor="#888" />
+            <stop offset="100%" stopColor="#555" />
+          </linearGradient>
+          <linearGradient id="liquidReservoirGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={chemical.liquidColor} />
+            <stop offset="100%" stopColor={chemical.color} />
+          </linearGradient>
+        </defs>
+        
+        {/* Reservoir container */}
+        <rect x="15" y="5" width="50" height="40" rx="4" fill="rgba(255,255,255,0.12)" stroke="rgba(200,220,255,0.3)" strokeWidth="1.5" />
+        
+        {/* Liquid in reservoir */}
+        <rect x="17" y="15" width="46" height="28" rx="2" fill="url(#liquidReservoirGradient)" opacity="0.85" />
+        
+        {/* Tap spout */}
+        <rect x="35" y="45" width="10" height="25" rx="2" fill="url(#tapMetalGradient)" />
+        
+        {/* Tap nozzle */}
+        <path d="M32,70 L48,70 L44,85 L36,85 Z" fill="url(#tapMetalGradient)" />
+        
+        {/* Tap handle */}
+        <rect x="55" y="35" width="20" height="8" rx="2" fill="#444" />
+        <circle cx="65" cy="39" r="4" fill="#666" />
+      </svg>
+
+      {/* Pouring Stream */}
+      {isPouring && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 60, opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="absolute left-1/2 -translate-x-1/2 w-2.5 origin-top"
+          style={{ 
+            top: '85px',
+            background: chemical.isTransparent 
+              ? `linear-gradient(to bottom, ${chemical.liquidColor}, ${chemical.liquidColor})`
+              : `linear-gradient(to bottom, ${chemical.liquidColor}, ${chemical.color})`,
+            borderRadius: '0 0 6px 6px',
+            boxShadow: `0 0 12px ${chemical.color}50`
+          }}
+        >
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              animate={{
+                y: [0, 45, 60],
+                scaleY: [1, 1, 0.3],
+                opacity: [1, 0.7, 0]
+              }}
+              transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.12 }}
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2.5 h-4 rounded-full"
+              style={{ backgroundColor: chemical.color }}
+            />
+          ))}
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
+
+// Solid Material Drop Animation
+function SolidDropAnimation({ 
+  chemical,
+  onComplete 
+}: { 
+  chemical: Chemical;
+  onComplete: () => void;
+}) {
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 400);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  return (
+    <motion.div
+      initial={{ y: -30, opacity: 0, scale: 0.5 }}
+      animate={{ y: 0, opacity: 1, scale: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25, ease: 'easeIn' }}
+      className="absolute left-1/2 -translate-x-1/2 -top-10 z-30 pointer-events-none"
+    >
+      <div 
+        className="w-5 h-5 rounded-sm shadow-lg"
+        style={{ 
+          backgroundColor: chemical.color,
+          boxShadow: `0 2px 6px ${chemical.color}80`
+        }}
+      >
+        <div className="w-full h-1/3 bg-white/25 rounded-t-sm" />
+      </div>
+    </motion.div>
+  );
+}
+
+// Add Button for Solid Materials
+function AddSolidButton({
+  chemical,
+  onAdd,
+  isDisabled
+}: {
+  chemical: Chemical;
+  onAdd: () => void;
+  isDisabled: boolean;
+}) {
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onAdd}
+      disabled={isDisabled}
+      className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-amber-500/90 hover:bg-amber-500 text-white font-semibold shadow-lg shadow-amber-500/30 transition-all touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <Plus size={18} />
+      <span>Add {chemical.formula}</span>
+    </motion.button>
+  );
+}
+
+// Pour Button for Liquids (hold to pour)
+function PourLiquidButton({
+  chemical,
+  onPourStart,
+  onPourEnd,
+  isDisabled,
+  isPouring
+}: {
+  chemical: Chemical;
+  onPourStart: () => void;
+  onPourEnd: () => void;
+  isDisabled: boolean;
+  isPouring: boolean;
+}) {
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      whileTap={{ scale: 0.95 }}
+      onMouseDown={onPourStart}
+      onMouseUp={onPourEnd}
+      onMouseLeave={onPourEnd}
+      onTouchStart={onPourStart}
+      onTouchEnd={onPourEnd}
+      disabled={isDisabled}
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-semibold shadow-lg transition-all touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed ${
+        isPouring 
+          ? 'bg-cyan-400 text-slate-900 shadow-cyan-400/50' 
+          : 'bg-cyan-500/90 hover:bg-cyan-500 text-white shadow-cyan-500/30'
+      }`}
+    >
+      <Droplets size={18} className={isPouring ? 'animate-pulse' : ''} />
+      <span>{isPouring ? 'Pouring...' : `Hold to pour ${chemical.formula}`}</span>
+    </motion.button>
+  );
+}
+
 export default function BeakerComponent({
   beaker,
   isSelected,
@@ -94,100 +305,171 @@ export default function BeakerComponent({
   selectedChemical,
   quantity,
   workspaceSize,
-  isMixing
+  isMixing,
+  isExploding = false
 }: BeakerComponentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showInfo, setShowInfo] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
-  const [liquidWave, setLiquidWave] = useState(0);
-  
-  // Long press detection
+  const [isPouring, setIsPouring] = useState(false);
+  const [showSolidDrop, setShowSolidDrop] = useState(false);
+
+  // Performance mode for low-end devices
+  const isLowPerformanceMode = useChemLabStore((state) => state.isLowPerformanceMode);
+
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const isLongPress = useRef(false);
   const touchStartPos = useRef({ x: 0, y: 0 });
+  const pourIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Animate liquid wave effect
-  useEffect(() => {
-    if (beaker.fillLevel > 0 && !isMixing) {
-      const interval = setInterval(() => {
-        setLiquidWave(prev => (prev + 1) % 360);
-      }, 50);
-      return () => clearInterval(interval);
+  // Determine if chemical is liquid or solid
+  const isLiquidChemical = selectedChemical?.state === 'liquid' ||
+    (selectedChemical?.state === 'gas' && selectedChemical?.id !== 'cl2');
+
+  const isSolidChemical = selectedChemical?.state === 'solid' ||
+    selectedChemical?.type === 'metal' ||
+    (selectedChemical?.type === 'metal' && selectedChemical?.state !== 'liquid');
+
+  // Calculate layered liquid colors - sorted by density (heaviest at bottom)
+  // Memoized for performance
+  const liquidLayers = useMemo(() => {
+    if (beaker.contents.length === 0) return [];
+
+    // Sort by density (heaviest/most dense at bottom)
+    const sortedContents = [...beaker.contents].sort((a, b) =>
+      b.chemical.density - a.chemical.density
+    );
+
+    const totalQuantity = sortedContents.reduce((sum, c) => sum + c.quantity, 0);
+    if (totalQuantity === 0) return [];
+
+    const totalHeight = (beaker.fillLevel / 100) * beaker.beakerType.liquidArea.height;
+    let currentY = 0;
+
+    return sortedContents.map((content) => {
+      const layerHeight = (content.quantity / totalQuantity) * totalHeight;
+      const layer = {
+        chemical: content.chemical,
+        height: layerHeight,
+        y: currentY,
+        color: content.chemical.liquidColor,
+        solidColor: content.chemical.color,
+        quantity: content.quantity
+      };
+      currentY += layerHeight;
+      return layer;
+    });
+  }, [beaker.contents, beaker.fillLevel, beaker.beakerType.liquidArea.height]);
+
+  // Legacy function for backward compatibility
+  const getLiquidColor = useCallback(() => {
+    if (beaker.contents.length === 0) return 'transparent';
+    const colors = beaker.contents.map(c => c.chemical.liquidColor);
+    if (colors.length === 1) return colors[0];
+    return colors[colors.length - 1];
+  }, [beaker.contents]);
+
+  // Handle continuous pouring for liquids
+  const handlePourStart = useCallback(() => {
+    if (!selectedChemical || !isLiquidChemical) return;
+    
+    setIsPouring(true);
+    onAddChemical(selectedChemical, Math.max(1, quantity / 10));
+    
+    pourIntervalRef.current = setInterval(() => {
+      onAddChemical(selectedChemical!, Math.max(1, quantity / 10));
+    }, 100);
+  }, [selectedChemical, isLiquidChemical, onAddChemical, quantity]);
+
+  const handlePourEnd = useCallback(() => {
+    setIsPouring(false);
+    if (pourIntervalRef.current) {
+      clearInterval(pourIntervalRef.current);
+      pourIntervalRef.current = null;
     }
-  }, [beaker.fillLevel, isMixing]);
+  }, []);
 
-  // Handle touch/mouse start
+  // Handle solid drop
+  const handleSolidAdd = useCallback(() => {
+    if (!selectedChemical) return;
+    setShowSolidDrop(true);
+    onAddChemical(selectedChemical, quantity);
+  }, [selectedChemical, onAddChemical, quantity]);
+
+  const handleSolidDropComplete = useCallback(() => {
+    setShowSolidDrop(false);
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pourIntervalRef.current) {
+        clearInterval(pourIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Long press handlers for menu
   const handleInteractionStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     isLongPress.current = false;
-    
-    // Get position
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     touchStartPos.current = { x: clientX, y: clientY };
     
-    // Start long press timer (500ms)
     longPressTimer.current = setTimeout(() => {
       isLongPress.current = true;
-      // Show floating menu
       setMenuPosition({ x: clientX, y: clientY });
       setShowMenu(true);
     }, 500);
   }, []);
 
-  // Handle touch/mouse end
-  const handleInteractionEnd = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-    }
-    
-    // If it wasn't a long press, select the beaker
-    if (!isLongPress.current && !showMenu) {
-      onSelect();
-    }
+  const handleInteractionEnd = useCallback(() => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    if (!isLongPress.current && !showMenu) onSelect();
   }, [onSelect, showMenu]);
 
-  // Handle touch move (cancel long press if moved)
   const handleInteractionMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     if (longPressTimer.current) {
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      
-      const deltaX = Math.abs(clientX - touchStartPos.current.x);
-      const deltaY = Math.abs(clientY - touchStartPos.current.y);
-      
-      // Cancel long press if moved more than 10px
-      if (deltaX > 10 || deltaY > 10) {
+      if (Math.abs(clientX - touchStartPos.current.x) > 10 || Math.abs(clientY - touchStartPos.current.y) > 10) {
         clearTimeout(longPressTimer.current);
         isLongPress.current = false;
       }
     }
   }, []);
 
-  // Calculate liquid color based on contents
-  const getLiquidColor = () => {
-    if (beaker.contents.length === 0) return 'transparent';
-    const colors = beaker.contents.map(c => c.chemical.liquidColor);
-    if (colors.length === 1) return colors[0];
-    return colors[colors.length - 1];
-  };
-
   const fillPercent = beaker.fillLevel;
   const liquidHeight = (fillPercent / 100) * beaker.beakerType.liquidArea.height;
-
   const { width, height } = beaker.beakerType;
+
+  // If exploding, show explosion effect
+  if (isExploding) {
+    return (
+      <motion.div
+        className="absolute z-20"
+        style={{ left: beaker.position.x, top: beaker.position.y }}
+      >
+        <div style={{ width, height, position: 'relative' }}>
+          <GlassShatter />
+        </div>
+        <motion.div
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ delay: 1, duration: 0.3 }}
+          onAnimationComplete={onRemove}
+        />
+      </motion.div>
+    );
+  }
 
   return (
     <>
       <motion.div
         ref={containerRef}
         initial={{ scale: 0, opacity: 0, x: workspaceSize.width / 2, y: workspaceSize.height / 2 }}
-        animate={{ 
-          scale: 1, 
-          opacity: 1,
-          x: beaker.position.x,
-          y: beaker.position.y
-        }}
+        animate={{ scale: 1, opacity: 1, x: beaker.position.x, y: beaker.position.y }}
         exit={{ scale: 0, opacity: 0, transition: { duration: 0.3 } }}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
         className="absolute cursor-pointer select-none z-10"
@@ -199,172 +481,221 @@ export default function BeakerComponent({
         onMouseMove={handleInteractionMove}
         onContextMenu={(e) => e.preventDefault()}
       >
-        {/* Beaker SVG - Clean, no extra borders */}
-        <div 
-          className="relative"
-          style={{ width, height }}
-        >
+        {/* Main container - proper positioning context for all children */}
+        <div className="relative" style={{ width, height }}>
+          
+          {/* Tap Dispenser - centered above container */}
+          <AnimatePresence>
+            {isPouring && selectedChemical && isLiquidChemical && (
+              <TapDispenser chemical={selectedChemical} isPouring={isPouring} />
+            )}
+          </AnimatePresence>
+
+          {/* Solid Drop Animation */}
+          <AnimatePresence>
+            {showSolidDrop && selectedChemical && (
+              <SolidDropAnimation chemical={selectedChemical} onComplete={handleSolidDropComplete} />
+            )}
+          </AnimatePresence>
+
+          {/* Glass Beaker/Container SVG */}
           <svg
             viewBox={`0 0 ${width} ${height}`}
-            className="w-full h-full"
+            className="block"
             style={{ 
+              width, 
+              height,
               filter: isSelected 
-                ? 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.5))'
-                : 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))'
+                ? 'drop-shadow(0 0 20px rgba(0, 255, 255, 0.6))'
+                : 'drop-shadow(0 10px 25px rgba(0,0,0,0.4))'
             }}
           >
             <defs>
-              {/* Glass Gradient */}
-              <linearGradient id={`glassGradient-${beaker.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.12)" />
-                <stop offset="50%" stopColor="rgba(255,255,255,0.03)" />
-                <stop offset="100%" stopColor="rgba(255,255,255,0.12)" />
+              <linearGradient id={`glassLeft-${beaker.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
+                <stop offset="100%" stopColor="rgba(255,255,255,0.05)" />
               </linearGradient>
-
-              {/* Liquid Gradient */}
-              <linearGradient id={`liquidGradient-${beaker.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor={getLiquidColor()} stopOpacity="0.9" />
-                <stop offset="100%" stopColor={getLiquidColor()} stopOpacity="0.6" />
+              <linearGradient id={`glassRight-${beaker.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
+                <stop offset="100%" stopColor="rgba(255,255,255,0.2)" />
               </linearGradient>
+              <pattern id={`reflection-${beaker.id}`} patternUnits="userSpaceOnUse" width="10" height="10">
+                <rect width="10" height="10" fill="transparent" />
+                <rect x="0" y="0" width="2" height="100%" fill="rgba(255,255,255,0.08)" />
+              </pattern>
+              <clipPath id={`liquidClip-${beaker.id}`}>
+                <path d={beaker.beakerType.svgPath} />
+              </clipPath>
             </defs>
 
-            {/* Glass Container - Clean */}
-            <path
-              d={beaker.beakerType.svgPath}
-              fill={`url(#glassGradient-${beaker.id})`}
-              stroke={isSelected ? 'rgba(0, 255, 255, 0.7)' : 'rgba(200, 220, 255, 0.4)'}
-              strokeWidth={isSelected ? 2.5 : 1.5}
-            />
-            
-            {/* Liquid */}
-            {fillPercent > 0 && (
-              <motion.g>
-                <motion.rect
-                  x={beaker.beakerType.liquidArea.x}
-                  y={beaker.beakerType.liquidArea.y + beaker.beakerType.liquidArea.height - liquidHeight}
-                  width={beaker.beakerType.liquidArea.width}
-                  height={liquidHeight}
-                  fill={`url(#liquidGradient-${beaker.id})`}
-                  rx="2"
-                  initial={{ height: 0 }}
-                  animate={{ height: liquidHeight }}
-                  transition={{ duration: 0.5 }}
-                />
+            {/* Glass Body */}
+            <g>
+              <path
+                d={beaker.beakerType.svgPath}
+                fill={`url(#glassLeft-${beaker.id})`}
+                stroke={isSelected ? 'rgba(0, 255, 255, 0.8)' : 'rgba(180, 200, 220, 0.5)'}
+                strokeWidth={isSelected ? 3 : 2}
+                strokeLinecap="round"
+              />
+              <path
+                d={beaker.beakerType.svgPath}
+                fill={`url(#reflection-${beaker.id})`}
+              />
+              <path
+                d={beaker.beakerType.svgPath}
+                fill="none"
+                stroke="rgba(255,255,255,0.3)"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeDasharray="5,15"
+              />
+            </g>
 
-                {/* Liquid Surface Wave */}
-                {!isMixing && (
-                  <motion.ellipse
-                    cx={beaker.beakerType.liquidArea.x + beaker.beakerType.liquidArea.width / 2}
-                    cy={beaker.beakerType.liquidArea.y + beaker.beakerType.liquidArea.height - liquidHeight + 2}
-                    rx={beaker.beakerType.liquidArea.width / 2 - 2}
-                    ry="3"
-                    fill={getLiquidColor()}
-                    animate={{
-                      rx: [
-                        beaker.beakerType.liquidArea.width / 2 - 2,
-                        beaker.beakerType.liquidArea.width / 2 - 4,
-                        beaker.beakerType.liquidArea.width / 2 - 2
-                      ],
-                      opacity: [0.8, 1, 0.8]
-                    }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                  />
-                )}
+            {/* Liquid - Layered by density (heaviest at bottom) */}
+            {fillPercent > 0 && (() => {
+              const layers = liquidLayers;
+              const baseY = beaker.beakerType.liquidArea.y + beaker.beakerType.liquidArea.height;
+              const totalLiquidHeight = (fillPercent / 100) * beaker.beakerType.liquidArea.height;
 
-                {/* Mixing Animation */}
-                {isMixing && (
-                  <>
-                    {[...Array(6)].map((_, i) => (
-                      <motion.circle
-                        key={i}
-                        cx={beaker.beakerType.liquidArea.x + 10 + (i * (beaker.beakerType.liquidArea.width - 20) / 5)}
-                        r={2 + Math.random() * 2}
-                        fill="rgba(255, 255, 255, 0.6)"
-                        initial={{ cy: beaker.beakerType.liquidArea.y + beaker.beakerType.liquidArea.height - liquidHeight + 5 }}
-                        animate={{
-                          cy: [
-                            beaker.beakerType.liquidArea.y + beaker.beakerType.liquidArea.height - liquidHeight + 5,
-                            beaker.beakerType.liquidArea.y + beaker.beakerType.liquidArea.height - 10,
-                            beaker.beakerType.liquidArea.y + beaker.beakerType.liquidArea.height - liquidHeight + 5
-                          ]
-                        }}
-                        transition={{ duration: 0.5 + Math.random() * 0.5, repeat: Infinity, delay: i * 0.1 }}
+              return (
+                <g clipPath={`url(#liquidClip-${beaker.id})`}>
+                  {/* Render each layer from bottom to top */}
+                  {layers.map((layer, index) => (
+                    <g key={`${layer.chemical.id}-${index}`}>
+                      {/* Layer body */}
+                      <rect
+                        x={beaker.beakerType.liquidArea.x}
+                        y={baseY - layer.y - layer.height}
+                        width={beaker.beakerType.liquidArea.width}
+                        height={Math.max(1, layer.height)}
+                        fill={layer.color}
+                        style={{ transition: isLowPerformanceMode ? 'none' : 'height 0.3s ease-out' }}
                       />
-                    ))}
-                  </>
-                )}
-              </motion.g>
-            )}
+                      {/* Layer top surface highlight */}
+                      {index === layers.length - 1 && (
+                        <ellipse
+                          cx={beaker.beakerType.liquidArea.x + beaker.beakerType.liquidArea.width / 2}
+                          cy={baseY - totalLiquidHeight + 3}
+                          rx={beaker.beakerType.liquidArea.width / 2 - 1}
+                          ry="4"
+                          fill={layer.color}
+                          opacity="0.9"
+                        />
+                      )}
+                      {/* Layer divider line (subtle) */}
+                      {index > 0 && layer.height > 2 && (
+                        <line
+                          x1={beaker.beakerType.liquidArea.x + 2}
+                          y1={baseY - layer.y}
+                          x2={beaker.beakerType.liquidArea.x + beaker.beakerType.liquidArea.width - 2}
+                          y2={baseY - layer.y}
+                          stroke="rgba(255,255,255,0.15)"
+                          strokeWidth="1"
+                        />
+                      )}
+                    </g>
+                  ))}
 
-            {/* Glass Shine */}
+                  {/* Top surface shine */}
+                  {layers.length > 0 && !isMixing && !isLowPerformanceMode && (
+                    <ellipse
+                      cx={beaker.beakerType.liquidArea.x + beaker.beakerType.liquidArea.width / 2}
+                      cy={baseY - totalLiquidHeight + 3}
+                      rx={beaker.beakerType.liquidArea.width / 2 - 2}
+                      ry="2"
+                      fill="rgba(255,255,255,0.25)"
+                    />
+                  )}
+
+                  {/* Mixing bubbles */}
+                  {isMixing && [...Array(3)].map((_, i) => (
+                    <circle
+                      key={i}
+                      cx={beaker.beakerType.liquidArea.x + 15 + i * 20}
+                      r={2}
+                      fill="rgba(255,255,255,0.5)"
+                      opacity="0.6"
+                    />
+                  ))}
+                </g>
+              );
+            })()}
+
+            {/* Glass shine */}
             <path
-              d={beaker.beakerType.svgPath}
+              d={`M${beaker.beakerType.liquidArea.x + 5},10 Q${beaker.beakerType.liquidArea.x + 5},${height/2} ${beaker.beakerType.liquidArea.x + 3},${height - 10}`}
               fill="none"
-              stroke="rgba(255, 255, 255, 0.15)"
+              stroke="rgba(255,255,255,0.4)"
               strokeWidth="3"
               strokeLinecap="round"
-              strokeDasharray="3 10"
+            />
+            <path
+              d={`M${width - 15},15 L${width - 15},${height - 15}`}
+              fill="none"
+              stroke="rgba(255,255,255,0.15)"
+              strokeWidth="2"
+              strokeLinecap="round"
             />
 
-            {/* Measurement Marks */}
-            <g fill="rgba(0, 255, 255, 0.4)" fontSize="6">
+            {/* Measurement marks */}
+            <g stroke="rgba(0,255,255,0.3)" strokeWidth="1" fontSize="7" fill="rgba(0,255,255,0.5)">
               {[25, 50, 75].map((mark) => {
-                if (mark > (beaker.beakerType.capacity / 100) * 100) return null;
                 const y = beaker.beakerType.liquidArea.y + beaker.beakerType.liquidArea.height - (mark / 100) * beaker.beakerType.liquidArea.height;
                 return (
                   <g key={mark}>
-                    <line
-                      x1={beaker.beakerType.liquidArea.x}
-                      y1={y}
-                      x2={beaker.beakerType.liquidArea.x + 5}
-                      y2={y}
-                      stroke="rgba(0, 255, 255, 0.25)"
-                      strokeWidth="1"
-                    />
-                    <text
-                      x={beaker.beakerType.liquidArea.x - 2}
-                      y={y + 2}
-                      textAnchor="end"
-                      fontSize="5"
-                      fill="rgba(0, 255, 255, 0.4)"
-                    >
-                      {Math.round(mark * beaker.beakerType.capacity / 100)}
-                    </text>
+                    <line x1="5" y1={y} x2="15" y2={y} />
+                    <text x="3" y={y + 3} textAnchor="end" fontSize="6">{Math.round(mark * beaker.beakerType.capacity / 100)}</text>
                   </g>
                 );
               })}
             </g>
           </svg>
-        </div>
 
-        {/* Simple Label */}
-        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none">
-          <span className="text-[10px] text-cyan-400/80 font-medium">
-            {beaker.beakerType.name}
-          </span>
+          {/* Label */}
+          <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none">
+            <span className="text-[10px] text-cyan-400/80 font-medium">{beaker.beakerType.name}</span>
+          </div>
         </div>
       </motion.div>
+
+      {/* Action Buttons - Fixed position */}
+      <AnimatePresence>
+        {selectedChemical && isSelected && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40"
+          >
+            {isLiquidChemical ? (
+              <PourLiquidButton
+                chemical={selectedChemical}
+                onPourStart={handlePourStart}
+                onPourEnd={handlePourEnd}
+                isDisabled={isMixing}
+                isPouring={isPouring}
+              />
+            ) : (
+              <AddSolidButton
+                chemical={selectedChemical}
+                onAdd={handleSolidAdd}
+                isDisabled={isMixing}
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Floating Menu */}
       <AnimatePresence>
         {showMenu && (
           <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40"
-              onClick={() => setShowMenu(false)}
-            />
-            
-            {/* Menu */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
             <FloatingMenu
               position={menuPosition}
               onClose={() => setShowMenu(false)}
               onInfo={() => setShowInfo(true)}
               onRemove={onRemove}
-              onAddChemical={selectedChemical ? () => onAddChemical(selectedChemical, quantity) : undefined}
               hasChemical={!!selectedChemical}
             />
           </>
@@ -375,13 +706,7 @@ export default function BeakerComponent({
       <AnimatePresence>
         {showInfo && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-              onClick={() => setShowInfo(false)}
-            />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setShowInfo(false)} />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -397,7 +722,6 @@ export default function BeakerComponent({
                   <p className="text-xs text-slate-400 capitalize">{beaker.beakerType.type}</p>
                 </div>
               </div>
-              
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-slate-300">
                   <span>Capacity:</span>
@@ -408,7 +732,6 @@ export default function BeakerComponent({
                   <span className="text-cyan-400 font-mono">{Math.round(fillPercent)}%</span>
                 </div>
               </div>
-              
               {beaker.contents.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-slate-700">
                   <p className="text-xs text-cyan-400 mb-2">Contents:</p>
@@ -425,13 +748,7 @@ export default function BeakerComponent({
                   </div>
                 </div>
               )}
-              
-              <button
-                onClick={() => setShowInfo(false)}
-                className="mt-4 w-full py-2 rounded-lg bg-cyan-500/20 text-cyan-400 font-medium hover:bg-cyan-500/30 transition-colors touch-manipulation"
-              >
-                Close
-              </button>
+              <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 rounded-lg bg-cyan-500/20 text-cyan-400 font-medium hover:bg-cyan-500/30 transition-colors touch-manipulation">Close</button>
             </motion.div>
           </>
         )}
