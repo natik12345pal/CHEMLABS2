@@ -29,8 +29,8 @@ export const chemicals: Chemical[] = [
     name: 'Water',
     formula: 'H₂O',
     type: 'solvent',
-    color: '#E8F4F8',
-    liquidColor: 'linear-gradient(180deg, rgba(200, 230, 240, 0.3) 0%, rgba(180, 215, 230, 0.5) 50%, rgba(160, 200, 220, 0.6) 100%)',
+    color: '#E3F2FD',
+    liquidColor: 'linear-gradient(180deg, rgba(227, 242, 253, 0.15) 0%, rgba(200, 230, 245, 0.25) 50%, rgba(180, 220, 240, 0.35) 100%)',
     density: 1.0,
     ph: 7,
     state: 'liquid',
@@ -44,14 +44,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['na', 'k', 'ca', 'li'],
     icon: '💧'
   },
-  // Hydrochloric Acid
+  // Hydrochloric Acid - Clear, slightly yellow in concentrated form
   {
     id: 'hcl',
     name: 'Hydrochloric Acid',
     formula: 'HCl',
     type: 'acid',
-    color: '#FFD700',
-    liquidColor: 'rgba(255, 215, 0, 0.5)',
+    color: '#FFFDE7',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 253, 231, 0.3) 0%, rgba(255, 249, 196, 0.45) 50%, rgba(255, 245, 157, 0.55) 100%)',
     density: 1.18,
     ph: 1,
     state: 'liquid',
@@ -65,14 +65,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['naoh', 'na', 'mg', 'zn', 'caco3'],
     icon: '⚗️'
   },
-  // Sulfuric Acid
+  // Sulfuric Acid - Clear, colorless, oily liquid
   {
     id: 'h2so4',
     name: 'Sulfuric Acid',
     formula: 'H₂SO₄',
     type: 'acid',
-    color: '#FFA500',
-    liquidColor: 'rgba(255, 165, 0, 0.6)',
+    color: '#FAFAFA',
+    liquidColor: 'linear-gradient(180deg, rgba(250, 250, 250, 0.4) 0%, rgba(245, 245, 245, 0.55) 50%, rgba(235, 235, 235, 0.7) 100%)',
     density: 1.84,
     ph: 0,
     state: 'liquid',
@@ -86,14 +86,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['naoh', 'na', 'sugar', 'cu'],
     icon: '🧪'
   },
-  // Sodium Hydroxide
+  // Sodium Hydroxide - Clear/colorless solution, white solid
   {
     id: 'naoh',
     name: 'Sodium Hydroxide',
     formula: 'NaOH',
     type: 'base',
-    color: '#E8E8E8',
-    liquidColor: 'rgba(232, 232, 232, 0.7)',
+    color: '#F5F5F5',
+    liquidColor: 'linear-gradient(180deg, rgba(245, 245, 245, 0.25) 0%, rgba(235, 235, 235, 0.4) 50%, rgba(220, 220, 220, 0.5) 100%)',
     density: 2.13,
     ph: 14,
     state: 'solid',
@@ -107,14 +107,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['hcl', 'h2so4', 'cu', 'al'],
     icon: '🧫'
   },
-  // Copper Sulfate
+  // Copper Sulfate - Bright blue solution (hydrated)
   {
     id: 'cuso4',
     name: 'Copper(II) Sulfate',
     formula: 'CuSO₄',
     type: 'salt',
-    color: '#1E90FF',
-    liquidColor: 'rgba(30, 144, 255, 0.7)',
+    color: '#1E88E5',
+    liquidColor: 'linear-gradient(180deg, rgba(30, 136, 229, 0.5) 0%, rgba(25, 118, 210, 0.7) 50%, rgba(21, 101, 192, 0.85) 100%)',
     density: 2.28,
     state: 'solid',
     hazard: 'caution',
@@ -127,14 +127,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['naoh', 'fe', 'zn'],
     icon: '💎'
   },
-  // Potassium Permanganate
+  // Potassium Permanganate - Deep purple/magenta solution
   {
     id: 'kmno4',
     name: 'Potassium Permanganate',
     formula: 'KMnO₄',
     type: 'oxidizer',
-    color: '#8B008B',
-    liquidColor: 'rgba(139, 0, 139, 0.8)',
+    color: '#7B1FA2',
+    liquidColor: 'linear-gradient(180deg, rgba(123, 31, 162, 0.5) 0%, rgba(106, 27, 154, 0.7) 50%, rgba(74, 20, 140, 0.9) 100%)',
     density: 2.7,
     state: 'solid',
     hazard: 'caution',
@@ -147,14 +147,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['h2o2', 'glycerin', 'h2so4'],
     icon: '🔮'
   },
-  // Sodium Chloride
+  // Sodium Chloride - Clear/colorless in solution
   {
     id: 'nacl',
     name: 'Sodium Chloride',
     formula: 'NaCl',
     type: 'salt',
     color: '#FFFFFF',
-    liquidColor: 'rgba(255, 255, 255, 0.3)',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(248, 248, 248, 0.25) 50%, rgba(240, 240, 240, 0.35) 100%)',
     density: 2.16,
     state: 'solid',
     hazard: 'safe',
@@ -167,14 +167,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['agno3', 'h2so4'],
     icon: '🧂'
   },
-  // Ethanol
+  // Ethanol - Clear, colorless liquid
   {
     id: 'ethanol',
     name: 'Ethanol',
     formula: 'C₂H₅OH',
     type: 'solvent',
-    color: '#F0E68C',
-    liquidColor: 'rgba(240, 230, 140, 0.4)',
+    color: '#FAFAFA',
+    liquidColor: 'linear-gradient(180deg, rgba(250, 250, 250, 0.2) 0%, rgba(245, 245, 245, 0.3) 50%, rgba(235, 235, 235, 0.4) 100%)',
     density: 0.789,
     state: 'liquid',
     hazard: 'caution',
@@ -187,14 +187,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['na', 'o2', 'kmno4'],
     icon: '🍷'
   },
-  // Sodium
+  // Sodium - Silvery-white metal
   {
     id: 'na',
     name: 'Sodium',
     formula: 'Na',
     type: 'metal',
-    color: '#C0C0C0',
-    liquidColor: 'rgba(192, 192, 192, 0.9)',
+    color: '#B0BEC5',
+    liquidColor: 'linear-gradient(180deg, rgba(176, 190, 197, 0.85) 0%, rgba(144, 164, 174, 0.9) 50%, rgba(120, 144, 156, 0.95) 100%)',
     density: 0.97,
     state: 'solid',
     hazard: 'dangerous',
@@ -207,14 +207,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['h2o', 'hcl', 'cl2', 'o2'],
     icon: '⚡'
   },
-  // Potassium
+  // Potassium - Silvery metal, darker than sodium
   {
     id: 'k',
     name: 'Potassium',
     formula: 'K',
     type: 'metal',
-    color: '#D4D4D4',
-    liquidColor: 'rgba(212, 212, 212, 0.9)',
+    color: '#B0BEC5',
+    liquidColor: 'linear-gradient(180deg, rgba(176, 190, 197, 0.85) 0%, rgba(144, 164, 174, 0.9) 50%, rgba(120, 144, 156, 0.95) 100%)',
     density: 0.89,
     state: 'solid',
     hazard: 'dangerous',
@@ -227,14 +227,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['h2o', 'hcl', 'cl2', 'o2'],
     icon: '💥'
   },
-  // Lithium
+  // Lithium - Silvery-white metal
   {
     id: 'li',
     name: 'Lithium',
     formula: 'Li',
     type: 'metal',
-    color: '#D3D3D3',
-    liquidColor: 'rgba(211, 211, 211, 0.9)',
+    color: '#CFD8DC',
+    liquidColor: 'linear-gradient(180deg, rgba(207, 216, 220, 0.85) 0%, rgba(176, 190, 197, 0.9) 50%, rgba(144, 164, 174, 0.95) 100%)',
     density: 0.53,
     state: 'solid',
     hazard: 'dangerous',
@@ -247,14 +247,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['h2o', 'hcl', 'o2', 'n2'],
     icon: '🔋'
   },
-  // Calcium
+  // Calcium - Dull grayish-silver metal
   {
     id: 'ca',
     name: 'Calcium',
     formula: 'Ca',
     type: 'metal',
-    color: '#F5F5DC',
-    liquidColor: 'rgba(245, 245, 220, 0.9)',
+    color: '#9E9E9E',
+    liquidColor: 'linear-gradient(180deg, rgba(158, 158, 158, 0.85) 0%, rgba(117, 117, 117, 0.9) 50%, rgba(97, 97, 97, 0.95) 100%)',
     density: 1.55,
     state: 'solid',
     hazard: 'caution',
@@ -267,14 +267,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['h2o', 'hcl', 'o2'],
     icon: '🦴'
   },
-  // Chlorine
+  // Chlorine - Yellow-green gas
   {
     id: 'cl2',
     name: 'Chlorine',
     formula: 'Cl₂',
     type: 'nonmetal',
-    color: '#90EE90',
-    liquidColor: 'rgba(144, 238, 144, 0.5)',
+    color: '#C5E1A5',
+    liquidColor: 'linear-gradient(180deg, rgba(197, 225, 165, 0.4) 0%, rgba(156, 204, 101, 0.55) 50%, rgba(139, 195, 74, 0.7) 100%)',
     density: 3.2,
     state: 'gas',
     hazard: 'dangerous',
@@ -287,14 +287,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['na', 'h2', 'fe'],
     icon: '💨'
   },
-  // Oxygen
+  // Oxygen - Colorless gas (pale blue when liquid)
   {
     id: 'o2',
     name: 'Oxygen',
     formula: 'O₂',
     type: 'nonmetal',
-    color: '#ADD8E6',
-    liquidColor: 'rgba(173, 216, 230, 0.3)',
+    color: '#E3F2FD',
+    liquidColor: 'linear-gradient(180deg, rgba(227, 242, 253, 0.15) 0%, rgba(187, 222, 251, 0.25) 50%, rgba(144, 202, 249, 0.35) 100%)',
     density: 1.43,
     state: 'gas',
     hazard: 'safe',
@@ -307,14 +307,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['na', 'fe', 'c', 'h2'],
     icon: '🫁'
   },
-  // Hydrogen
+  // Hydrogen - Colorless gas
   {
     id: 'h2',
     name: 'Hydrogen',
     formula: 'H₂',
     type: 'nonmetal',
-    color: '#F5F5F5',
-    liquidColor: 'rgba(245, 245, 245, 0.2)',
+    color: '#FAFAFA',
+    liquidColor: 'linear-gradient(180deg, rgba(250, 250, 250, 0.1) 0%, rgba(245, 245, 245, 0.2) 50%, rgba(238, 238, 238, 0.3) 100%)',
     density: 0.09,
     state: 'gas',
     hazard: 'caution',
@@ -327,14 +327,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['o2', 'cl2', 'na'],
     icon: '🎈'
   },
-  // Phenolphthalein
+  // Phenolphthalein - Colorless in acid, pink/magenta in base
   {
     id: 'phenolphthalein',
     name: 'Phenolphthalein',
     formula: 'C₂₀H₁₄O₄',
     type: 'indicator',
-    color: '#FF69B4',
-    liquidColor: 'rgba(255, 105, 180, 0.3)',
+    color: '#F8BBD9',
+    liquidColor: 'linear-gradient(180deg, rgba(248, 187, 217, 0.2) 0%, rgba(244, 143, 177, 0.4) 50%, rgba(240, 98, 146, 0.6) 100%)',
     density: 1.28,
     state: 'solid',
     hazard: 'safe',
@@ -347,14 +347,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['naoh', 'hcl', 'koh'],
     icon: '🎭'
   },
-  // Litmus
+  // Litmus - Purple in neutral, red in acid, blue in base
   {
     id: 'litmus',
     name: 'Litmus',
     formula: 'C₉H₁₀N₂O₃',
     type: 'indicator',
-    color: '#9370DB',
-    liquidColor: 'rgba(147, 112, 219, 0.5)',
+    color: '#9C27B0',
+    liquidColor: 'linear-gradient(180deg, rgba(156, 39, 176, 0.35) 0%, rgba(123, 31, 162, 0.5) 50%, rgba(106, 27, 154, 0.65) 100%)',
     density: 1.5,
     state: 'solid',
     hazard: 'safe',
@@ -365,14 +365,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['hcl', 'naoh'],
     icon: '🎨'
   },
-  // Calcium Carbonate
+  // Calcium Carbonate - White solid, suspension/cloudy in water
   {
     id: 'caco3',
     name: 'Calcium Carbonate',
     formula: 'CaCO₃',
     type: 'salt',
-    color: '#FFFAF0',
-    liquidColor: 'rgba(255, 250, 240, 0.4)',
+    color: '#FFFAFA',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 250, 250, 0.4) 0%, rgba(255, 255, 255, 0.55) 50%, rgba(245, 245, 245, 0.65) 100%)',
     density: 2.71,
     state: 'solid',
     hazard: 'safe',
@@ -384,14 +384,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['hcl', 'h2so4'],
     icon: '🪨'
   },
-  // Iron
+  // Iron - Gray metallic
   {
     id: 'fe',
     name: 'Iron',
     formula: 'Fe',
     type: 'metal',
-    color: '#708090',
-    liquidColor: 'rgba(112, 128, 144, 0.9)',
+    color: '#78909C',
+    liquidColor: 'linear-gradient(180deg, rgba(120, 144, 156, 0.85) 0%, rgba(96, 125, 139, 0.9) 50%, rgba(69, 90, 100, 0.95) 100%)',
     density: 7.87,
     state: 'solid',
     hazard: 'safe',
@@ -404,14 +404,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['o2', 'hcl', 'cuso4', 'cl2'],
     icon: '🔩'
   },
-  // Magnesium
+  // Magnesium - Silvery-white metal
   {
     id: 'mg',
     name: 'Magnesium',
     formula: 'Mg',
     type: 'metal',
-    color: '#E0E0E0',
-    liquidColor: 'rgba(224, 224, 224, 0.9)',
+    color: '#ECEFF1',
+    liquidColor: 'linear-gradient(180deg, rgba(236, 239, 241, 0.85) 0%, rgba(207, 216, 220, 0.9) 50%, rgba(176, 190, 197, 0.95) 100%)',
     density: 1.74,
     state: 'solid',
     hazard: 'caution',
@@ -424,14 +424,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['hcl', 'o2', 'h2o'],
     icon: '🔥'
   },
-  // Zinc
+  // Zinc - Bluish-gray metal
   {
     id: 'zn',
     name: 'Zinc',
     formula: 'Zn',
     type: 'metal',
-    color: '#A9A9A9',
-    liquidColor: 'rgba(169, 169, 169, 0.9)',
+    color: '#90A4AE',
+    liquidColor: 'linear-gradient(180deg, rgba(144, 164, 174, 0.85) 0%, rgba(120, 144, 156, 0.9) 50%, rgba(96, 125, 139, 0.95) 100%)',
     density: 7.14,
     state: 'solid',
     hazard: 'safe',
@@ -444,14 +444,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['hcl', 'cuso4', 'o2'],
     icon: '🔋'
   },
-  // Ammonia
+  // Ammonia - Clear, colorless liquid (ammonium hydroxide solution)
   {
     id: 'nh3',
     name: 'Ammonia',
     formula: 'NH₃',
     type: 'base',
-    color: '#E6E6FA',
-    liquidColor: 'rgba(230, 230, 250, 0.4)',
+    color: '#F3E5F5',
+    liquidColor: 'linear-gradient(180deg, rgba(243, 229, 245, 0.25) 0%, rgba(225, 190, 231, 0.35) 50%, rgba(206, 147, 216, 0.45) 100%)',
     density: 0.73,
     ph: 11,
     state: 'gas',
@@ -465,14 +465,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['hcl', 'h2so4', 'cu'],
     icon: '🧹'
   },
-  // Hydrogen Peroxide
+  // Hydrogen Peroxide - Clear, colorless liquid
   {
     id: 'h2o2',
     name: 'Hydrogen Peroxide',
     formula: 'H₂O₂',
     type: 'oxidizer',
-    color: '#F8F8FF',
-    liquidColor: 'rgba(248, 248, 255, 0.4)',
+    color: '#FAFAFA',
+    liquidColor: 'linear-gradient(180deg, rgba(250, 250, 250, 0.25) 0%, rgba(245, 245, 245, 0.35) 50%, rgba(235, 235, 235, 0.45) 100%)',
     density: 1.45,
     state: 'liquid',
     hazard: 'caution',
@@ -485,14 +485,14 @@ export const chemicals: Chemical[] = [
     reactsWith: ['kmno4', 'na', 'fe'],
     icon: '💊'
   },
-  // Silver Nitrate
+  // Silver Nitrate - Clear/colorless solution
   {
     id: 'agno3',
     name: 'Silver Nitrate',
     formula: 'AgNO₃',
     type: 'salt',
-    color: '#C0C0C0',
-    liquidColor: 'rgba(192, 192, 192, 0.5)',
+    color: '#FAFAFA',
+    liquidColor: 'linear-gradient(180deg, rgba(250, 250, 250, 0.25) 0%, rgba(224, 224, 224, 0.4) 50%, rgba(200, 200, 200, 0.55) 100%)',
     density: 4.35,
     state: 'solid',
     hazard: 'caution',
@@ -508,14 +508,14 @@ export const chemicals: Chemical[] = [
 
   // ========== MORE ACIDS ==========
 
-  // Nitric Acid
+  // Nitric Acid - Colorless to pale yellow
   {
     id: 'hno3',
     name: 'Nitric Acid',
     formula: 'HNO₃',
     type: 'acid',
-    color: '#FFD700',
-    liquidColor: 'rgba(255, 215, 0, 0.55)',
+    color: '#FFFDE7',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 253, 231, 0.3) 0%, rgba(255, 249, 196, 0.45) 50%, rgba(255, 245, 157, 0.6) 100%)',
     density: 1.51,
     ph: 0,
     state: 'liquid',
@@ -530,14 +530,14 @@ export const chemicals: Chemical[] = [
     icon: '💣'
   },
 
-  // Acetic Acid
+  // Acetic Acid - Clear, colorless liquid (vinegar)
   {
     id: 'ch3cooh',
     name: 'Acetic Acid',
     formula: 'CH₃COOH',
     type: 'acid',
-    color: '#FFFACD',
-    liquidColor: 'rgba(255, 250, 205, 0.5)',
+    color: '#FFF8E1',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 248, 225, 0.3) 0%, rgba(255, 236, 179, 0.4) 50%, rgba(255, 224, 130, 0.5) 100%)',
     density: 1.05,
     ph: 3,
     state: 'liquid',
@@ -552,14 +552,14 @@ export const chemicals: Chemical[] = [
     icon: '🫗'
   },
 
-  // Phosphoric Acid
+  // Phosphoric Acid - Clear, colorless, syrupy liquid
   {
     id: 'h3po4',
     name: 'Phosphoric Acid',
     formula: 'H₃PO₄',
     type: 'acid',
-    color: '#FFF8DC',
-    liquidColor: 'rgba(255, 248, 220, 0.5)',
+    color: '#FAFAFA',
+    liquidColor: 'linear-gradient(180deg, rgba(250, 250, 250, 0.35) 0%, rgba(245, 245, 245, 0.5) 50%, rgba(235, 235, 235, 0.65) 100%)',
     density: 1.88,
     ph: 1,
     state: 'liquid',
@@ -574,14 +574,14 @@ export const chemicals: Chemical[] = [
     icon: '🥤'
   },
 
-  // Citric Acid
+  // Citric Acid - Clear/colorless in solution
   {
     id: 'c6h8o7',
     name: 'Citric Acid',
     formula: 'C₆H₈O₇',
     type: 'acid',
-    color: '#FFFAF0',
-    liquidColor: 'rgba(255, 250, 240, 0.4)',
+    color: '#FFFDE7',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 253, 231, 0.2) 0%, rgba(255, 249, 196, 0.3) 50%, rgba(255, 245, 157, 0.4) 100%)',
     density: 1.66,
     ph: 2,
     state: 'solid',
@@ -595,14 +595,14 @@ export const chemicals: Chemical[] = [
     icon: '🍋'
   },
 
-  // Carbonic Acid
+  // Carbonic Acid - Clear, colorless (in carbonated water)
   {
     id: 'h2co3',
     name: 'Carbonic Acid',
     formula: 'H₂CO₃',
     type: 'acid',
-    color: '#E0FFFF',
-    liquidColor: 'rgba(224, 255, 255, 0.4)',
+    color: '#E0F7FA',
+    liquidColor: 'linear-gradient(180deg, rgba(224, 247, 250, 0.2) 0%, rgba(178, 235, 242, 0.3) 50%, rgba(128, 222, 234, 0.4) 100%)',
     density: 1.0,
     ph: 4,
     state: 'liquid',
@@ -617,14 +617,14 @@ export const chemicals: Chemical[] = [
 
   // ========== MORE SALTS ==========
 
-  // Potassium Chloride
+  // Potassium Chloride - Clear/colorless in solution
   {
     id: 'kcl',
     name: 'Potassium Chloride',
     formula: 'KCl',
     type: 'salt',
-    color: '#F5F5F5',
-    liquidColor: 'rgba(245, 245, 245, 0.35)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 1.98,
     state: 'solid',
     hazard: 'safe',
@@ -638,14 +638,14 @@ export const chemicals: Chemical[] = [
     icon: '🧂'
   },
 
-  // Ammonium Chloride
+  // Ammonium Chloride - Clear/colorless in solution
   {
     id: 'nh4cl',
     name: 'Ammonium Chloride',
     formula: 'NH₄Cl',
     type: 'salt',
-    color: '#FAFAFA',
-    liquidColor: 'rgba(250, 250, 250, 0.35)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 1.53,
     state: 'solid',
     hazard: 'safe',
@@ -658,14 +658,14 @@ export const chemicals: Chemical[] = [
     icon: '🔬'
   },
 
-  // Sodium Bicarbonate
+  // Sodium Bicarbonate - White cloudy suspension in water
   {
     id: 'nahco3',
     name: 'Sodium Bicarbonate',
     formula: 'NaHCO₃',
     type: 'salt',
     color: '#FFFAFA',
-    liquidColor: 'rgba(255, 250, 250, 0.35)',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 250, 250, 0.3) 0%, rgba(255, 255, 255, 0.45) 50%, rgba(248, 248, 248, 0.55) 100%)',
     density: 2.20,
     state: 'solid',
     hazard: 'safe',
@@ -678,14 +678,14 @@ export const chemicals: Chemical[] = [
     icon: '🧁'
   },
 
-  // Magnesium Sulfate
+  // Magnesium Sulfate - Clear/colorless in solution
   {
     id: 'mgso4',
     name: 'Magnesium Sulfate',
     formula: 'MgSO₄',
     type: 'salt',
-    color: '#F0FFFF',
-    liquidColor: 'rgba(240, 255, 255, 0.4)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 2.66,
     state: 'solid',
     hazard: 'safe',
@@ -698,14 +698,14 @@ export const chemicals: Chemical[] = [
     icon: '🛁'
   },
 
-  // Potassium Nitrate
+  // Potassium Nitrate - Clear/colorless in solution
   {
     id: 'kno3',
     name: 'Potassium Nitrate',
     formula: 'KNO₃',
     type: 'salt',
-    color: '#FFFAF0',
-    liquidColor: 'rgba(255, 250, 240, 0.4)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 2.11,
     state: 'solid',
     hazard: 'caution',
@@ -719,14 +719,14 @@ export const chemicals: Chemical[] = [
     icon: '🧨'
   },
 
-  // Calcium Chloride
+  // Calcium Chloride - Clear/colorless in solution
   {
     id: 'cacl2',
     name: 'Calcium Chloride',
     formula: 'CaCl₂',
     type: 'salt',
-    color: '#F8F8FF',
-    liquidColor: 'rgba(248, 248, 255, 0.4)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 2.15,
     state: 'solid',
     hazard: 'safe',
@@ -740,14 +740,14 @@ export const chemicals: Chemical[] = [
     icon: '❄️'
   },
 
-  // Sodium Sulfate
+  // Sodium Sulfate - Clear/colorless in solution
   {
     id: 'na2so4',
     name: 'Sodium Sulfate',
     formula: 'Na₂SO₄',
     type: 'salt',
-    color: '#FAFAFA',
-    liquidColor: 'rgba(250, 250, 250, 0.35)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 2.66,
     state: 'solid',
     hazard: 'safe',
@@ -760,14 +760,14 @@ export const chemicals: Chemical[] = [
     icon: '🧴'
   },
 
-  // Potassium Sulfate
+  // Potassium Sulfate - Clear/colorless in solution
   {
     id: 'k2so4',
     name: 'Potassium Sulfate',
     formula: 'K₂SO₄',
     type: 'salt',
-    color: '#F5F5F5',
-    liquidColor: 'rgba(245, 245, 245, 0.35)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 2.66,
     state: 'solid',
     hazard: 'safe',
@@ -780,14 +780,14 @@ export const chemicals: Chemical[] = [
     icon: '🌱'
   },
 
-  // Ammonium Sulfate
+  // Ammonium Sulfate - Clear/colorless in solution
   {
     id: 'nh42so4',
     name: 'Ammonium Sulfate',
     formula: '(NH₄)₂SO₄',
     type: 'salt',
-    color: '#FFFAFA',
-    liquidColor: 'rgba(255, 250, 250, 0.35)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 1.77,
     state: 'solid',
     hazard: 'safe',
@@ -800,14 +800,14 @@ export const chemicals: Chemical[] = [
     icon: '🌾'
   },
 
-  // Iron(III) Chloride
+  // Iron(III) Chloride - Yellow-brown to orange-brown solution
   {
     id: 'fecl3',
     name: 'Iron(III) Chloride',
     formula: 'FeCl₃',
     type: 'salt',
-    color: '#8B4513',
-    liquidColor: 'rgba(139, 69, 19, 0.6)',
+    color: '#FF8F00',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 143, 0, 0.45) 0%, rgba(255, 111, 0, 0.6) 50%, rgba(230, 81, 0, 0.75) 100%)',
     density: 2.90,
     state: 'solid',
     hazard: 'caution',
@@ -820,14 +820,14 @@ export const chemicals: Chemical[] = [
     icon: '🖊️'
   },
 
-  // Barium Chloride
+  // Barium Chloride - Clear/colorless in solution
   {
     id: 'bacl2',
     name: 'Barium Chloride',
     formula: 'BaCl₂',
     type: 'salt',
-    color: '#E8E8E8',
-    liquidColor: 'rgba(232, 232, 232, 0.4)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 3.86,
     state: 'solid',
     hazard: 'dangerous',
@@ -840,14 +840,14 @@ export const chemicals: Chemical[] = [
     icon: '🎆'
   },
 
-  // Sodium Carbonate
+  // Sodium Carbonate - Clear/colorless in solution
   {
     id: 'na2co3',
     name: 'Sodium Carbonate',
     formula: 'Na₂CO₃',
     type: 'salt',
-    color: '#FFFAF0',
-    liquidColor: 'rgba(255, 250, 240, 0.4)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 248, 248, 0.3) 50%, rgba(240, 240, 240, 0.4) 100%)',
     density: 2.54,
     state: 'solid',
     hazard: 'caution',
@@ -860,14 +860,14 @@ export const chemicals: Chemical[] = [
     icon: '🧼'
   },
 
-  // Aluminum Sulfate
+  // Aluminum Sulfate - Clear/colorless in solution
   {
     id: 'al2so43',
     name: 'Aluminum Sulfate',
     formula: 'Al₂(SO₄)₃',
     type: 'salt',
-    color: '#F0F0F0',
-    liquidColor: 'rgba(240, 240, 240, 0.4)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 2.67,
     state: 'solid',
     hazard: 'caution',
@@ -880,14 +880,14 @@ export const chemicals: Chemical[] = [
     icon: '📄'
   },
 
-  // Copper(II) Chloride
+  // Copper(II) Chloride - Blue-green (teal) solution
   {
     id: 'cucl2',
     name: 'Copper(II) Chloride',
     formula: 'CuCl₂',
     type: 'salt',
-    color: '#228B22',
-    liquidColor: 'rgba(34, 139, 34, 0.6)',
+    color: '#00897B',
+    liquidColor: 'linear-gradient(180deg, rgba(0, 137, 123, 0.5) 0%, rgba(0, 121, 107, 0.65) 50%, rgba(0, 105, 92, 0.8) 100%)',
     density: 3.39,
     state: 'solid',
     hazard: 'caution',
@@ -900,14 +900,14 @@ export const chemicals: Chemical[] = [
     icon: '🟢'
   },
 
-  // Zinc Sulfate
+  // Zinc Sulfate - Clear/colorless in solution
   {
     id: 'znso4',
     name: 'Zinc Sulfate',
     formula: 'ZnSO₄',
     type: 'salt',
-    color: '#F5F5DC',
-    liquidColor: 'rgba(245, 245, 220, 0.4)',
+    color: '#FFFFFF',
+    liquidColor: 'linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(245, 245, 245, 0.25) 50%, rgba(235, 235, 235, 0.35) 100%)',
     density: 3.54,
     state: 'solid',
     hazard: 'caution',
