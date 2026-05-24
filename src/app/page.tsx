@@ -86,36 +86,25 @@ export default function Home() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 255, 0.5); }
 
-        /* Low Performance Mode - for low-end smart boards */
-        .low-performance * {
-          animation-duration: 0s !important;
-          transition-duration: 0s !important;
-          box-shadow: none !important;
-          filter: none !important;
-          backdrop-filter: none !important;
-        }
-        .low-performance .animate-pulse,
-        .low-performance .animate-bounce,
-        .low-performance .animate-spin { animation: none !important; }
-        .low-performance svg { filter: none !important; }
-        .low-performance .drop-shadow { filter: none !important; }
+        .low-performance * { animation-duration: 0s !important; transition-duration: 0s !important; }
+        .low-performance .animate-pulse, .low-performance .animate-bounce, .low-performance .animate-spin { animation: none !important; }
 
         .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
         .touch-manipulation { touch-action: manipulation; min-height: 44px; min-width: 44px; }
 
-        /* GPU acceleration for smooth animations */
-        .gpu-accelerate {
-          transform: translateZ(0);
-          will-change: transform;
-          backface-visibility: hidden;
+        /* Prevent context menu on interactive elements for smart boards */
+        .touch-manipulation, .select-none {
+          -webkit-touch-callout: none !important;
+          -webkit-user-select: none !important;
+          user-select: none !important;
         }
 
-        /* Smart board touch optimization */
-        @media (pointer: coarse) {
-          button, [role="button"] {
-            min-height: 48px;
-            min-width: 48px;
-          }
+        /* Pour button specific - extra protection */
+        button[data-pour="true"] {
+          -webkit-touch-callout: none !important;
+          -webkit-user-select: none !important;
+          user-select: none !important;
+          touch-action: manipulation !important;
         }
 
         @media (max-width: 640px) { html { font-size: 14px; } }

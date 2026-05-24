@@ -1,47 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { useChemLabStore } from '@/store/chemlab-store';
 
-// Static predetermined values
-const MOLECULE_POSITIONS = [
-  { x: 10, y: 25 },
-  { x: 25, y: 40 },
-  { x: 40, y: 20 },
-  { x: 55, y: 45 },
-  { x: 70, y: 30 },
-  { x: 85, y: 35 },
-];
-
-// Reduced bubbles for better performance
-const BUBBLE_CONFIGS = [
-  { cx: 35, delay: 0, duration: 1.4, size: 3 },
-  { cx: 55, delay: 0.15, duration: 1.5, size: 4 },
-  { cx: 75, delay: 0.3, duration: 1.3, size: 2.5 },
-  { cx: 45, delay: 0.45, duration: 1.6, size: 3.5 },
-  { cx: 65, delay: 0.6, duration: 1.4, size: 2.5 },
-  { cx: 50, delay: 0.2, duration: 1.5, size: 3 },
-];
-
 export default function LoadingScreen() {
-  const { setLoading, isLowPerformanceMode } = useChemLabStore();
+  const { setLoading } = useChemLabStore();
   const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState<'loading' | 'complete'>('loading');
 
   useEffect(() => {
-    // Fast progress - no initial delay
-    let current = 0;
+    // Smooth loading progress with realistic feel
+    const steps = [15, 35, 55, 75, 90, 100];
+    let stepIndex = 0;
+    
     const interval = setInterval(() => {
-      current += 18 + Math.random() * 12;
-      if (current >= 100) {
-        setProgress(100);
-        clearInterval(interval);
-        // Minimal delay after complete
-        setTimeout(() => setLoading(false), 150);
-      } else {
-        setProgress(Math.min(98, current));
+      if (stepIndex < steps.length) {
+        setProgress(steps[stepIndex]);
+        stepIndex++;
       }
-    }, 100);
+      if (stepIndex >= steps.length) {
+        clearInterval(interval);
+        setPhase('complete');
+        setTimeout(() => setLoading(false), 300);
+      }
+    }, 180);
 
     return () => clearInterval(interval);
   }, [setLoading]);
@@ -53,272 +35,241 @@ export default function LoadingScreen() {
       
       {/* Grid Pattern */}
       <div 
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.04]"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(0,255,255,0.8) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,255,255,0.8) 1px, transparent 1px)
+            linear-gradient(rgba(0,255,255,0.5) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,255,255,0.5) 1px, transparent 1px)
           `,
-          backgroundSize: '40px 40px'
+          backgroundSize: '50px 50px'
         }}
       />
+      
+      {/* Animated Gradient Orbs */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div 
+          className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full animate-[pulse_4s_ease-in-out_infinite]"
+          style={{
+            background: 'radial-gradient(circle, rgba(0,255,255,0.15) 0%, transparent 60%)',
+            filter: 'blur(60px)'
+          }}
+        />
+        <div 
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full animate-[pulse_4s_ease-in-out_infinite_0.5s]"
+          style={{
+            background: 'radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 60%)',
+            filter: 'blur(60px)'
+          }}
+        />
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full animate-[pulse_5s_ease-in-out_infinite_1s]"
+          style={{
+            background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 60%)',
+            filter: 'blur(80px)'
+          }}
+        />
+      </div>
 
-      {/* Glow Effects - No animation delay */}
-      <div 
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full animate-pulse"
-        style={{
-          background: 'radial-gradient(circle, rgba(0,255,255,0.12) 0%, transparent 50%)',
-          filter: 'blur(80px)'
-        }}
-      />
-      <div 
-        className="absolute bottom-1/3 left-1/2 -translate-x-1/2 w-[350px] h-[350px] rounded-full animate-pulse"
-        style={{
-          background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 50%)',
-          filter: 'blur(60px)',
-          animationDelay: '0.5s'
-        }}
-      />
-
-      {/* Floating Molecules - Only if not low performance */}
-      {!isLowPerformanceMode && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {MOLECULE_POSITIONS.map((mol, i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              initial={{ x: `${mol.x}%`, y: `${mol.y}%`, opacity: 0.15 }}
-              animate={{ 
-                y: [`${mol.y}%`, `${mol.y - 15}%`, `${mol.y}%`],
-                opacity: [0.15, 0.25, 0.15]
-              }}
-              transition={{ 
-                duration: 5, 
-                repeat: Infinity, 
-                ease: 'easeInOut',
-                delay: i * 0.2 
-              }}
-            >
-              <svg width="36" height="36" viewBox="0 0 40 40" className="text-cyan-400/20">
-                <circle cx="20" cy="20" r="7" fill="currentColor" />
-                <circle cx="10" cy="12" r="3.5" fill="currentColor" opacity="0.6" />
-                <circle cx="30" cy="12" r="3.5" fill="currentColor" opacity="0.6" />
-              </svg>
-            </motion.div>
-          ))}
-        </div>
-      )}
-
-      {/* Main Content - No entrance animation delay */}
+      {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center px-4">
-        
-        {/* Beaker */}
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.4 }}
-          className="relative mb-5"
-        >
-          {/* Glow */}
-          <div 
-            className="absolute inset-0 -m-8 rounded-full animate-pulse"
-            style={{
-              background: 'radial-gradient(circle, rgba(0,255,255,0.15) 0%, transparent 60%)',
-              filter: 'blur(30px)'
-            }}
-          />
-
-          {/* Beaker SVG */}
-          <svg viewBox="0 0 160 200" className="w-32 h-40 sm:w-40 sm:h-48">
-            <defs>
-              <linearGradient id="lg-glass" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.12)" />
-                <stop offset="50%" stopColor="rgba(255,255,255,0.04)" />
-                <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
-              </linearGradient>
-              <linearGradient id="lg-liquid" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="rgba(0,255,255,0.85)" />
-                <stop offset="100%" stopColor="rgba(0,180,180,0.5)" />
-              </linearGradient>
-              <linearGradient id="lg-stroke" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#22d3ee" />
-                <stop offset="100%" stopColor="#10b981" />
-              </linearGradient>
-              <linearGradient id="lg-bubble" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.85)" />
-                <stop offset="100%" stopColor="rgba(0,255,255,0.4)" />
-              </linearGradient>
-              <clipPath id="clip-beaker">
-                <path d="M35,50 L35,100 L15,180 Q15,195 80,195 Q145,195 145,180 L125,100 L125,50 Z" />
-              </clipPath>
-            </defs>
-
-            {/* Beaker Body */}
-            <path
-              d="M35,50 L35,100 L15,180 Q15,195 80,195 Q145,195 145,180 L125,100 L125,50"
-              fill="url(#lg-glass)"
-              stroke="url(#lg-stroke)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-            <rect x="35" y="25" width="90" height="30" rx="4" fill="url(#lg-glass)" stroke="url(#lg-stroke)" strokeWidth="2" />
-            <ellipse cx="80" cy="25" rx="48" ry="7" fill="url(#lg-glass)" stroke="url(#lg-stroke)" strokeWidth="1.5" />
-            <path d="M125,50 Q133,45 130,37 L125,25" fill="none" stroke="url(#lg-stroke)" strokeWidth="2" strokeLinecap="round" />
-
-            {/* Liquid */}
-            <g clipPath="url(#clip-beaker)">
-              <motion.rect
-                x="10"
-                width="140"
-                fill="url(#lg-liquid)"
-                initial={{ y: 195, height: 0 }}
-                animate={{ y: 195 - (progress * 1.3), height: progress * 1.3 }}
-                transition={{ duration: 0.15 }}
+        {/* Flask Animation */}
+        <div className="relative mb-8">
+          {/* Glow Ring */}
+          <div className="absolute inset-0 -m-8 rounded-full bg-gradient-to-r from-cyan-400/20 via-purple-400/20 to-pink-400/20 blur-2xl animate-pulse" />
+          
+          {/* Flask Container */}
+          <div className="relative animate-[float_3s_ease-in-out_infinite]">
+            <svg viewBox="0 0 120 150" className="w-32 h-36 sm:w-40 sm:h-44">
+              <defs>
+                {/* Gradients */}
+                <linearGradient id="flaskStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#22d3ee" />
+                  <stop offset="50%" stopColor="#06b6d4" />
+                  <stop offset="100%" stopColor="#10b981" />
+                </linearGradient>
+                <linearGradient id="liquidFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="rgba(34,211,238,0.8)" />
+                  <stop offset="50%" stopColor="rgba(6,182,212,0.6)" />
+                  <stop offset="100%" stopColor="rgba(16,185,129,0.5)" />
+                </linearGradient>
+                <linearGradient id="bubbleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="rgba(255,255,255,0.8)" />
+                  <stop offset="100%" stopColor="rgba(34,211,238,0.4)" />
+                </linearGradient>
+                {/* Glow Filter */}
+                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              
+              {/* Flask Body */}
+              <path
+                d="M35,35 L35,65 L18,120 Q18,138 60,138 Q102,138 102,120 L85,65 L85,35"
+                fill="rgba(15,23,42,0.5)"
+                stroke="url(#flaskStroke)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#glow)"
               />
               
-              {progress > 5 && (
-                <motion.ellipse
-                  cx="80"
-                  rx="58"
-                  ry="7"
-                  fill="rgba(0,255,255,0.5)"
-                  animate={{
-                    cy: 195 - (progress * 1.3) + 4,
-                    rx: [56, 60, 56]
-                  }}
-                  transition={{ 
-                    cy: { duration: 0.15 },
-                    rx: { duration: 1.2, repeat: Infinity, ease: 'easeInOut' }
-                  }}
-                />
-              )}
-
-              {/* Bubbles - Reduced count */}
-              {progress > 10 && BUBBLE_CONFIGS.map((b, i) => (
-                <motion.circle
-                  key={i}
-                  cx={b.cx}
-                  r={b.size}
-                  fill="url(#lg-bubble)"
-                  animate={{
-                    cy: [185, 90, 55],
-                    opacity: [0, 0.7, 0]
-                  }}
-                  transition={{
-                    duration: b.duration,
-                    repeat: Infinity,
-                    ease: 'easeOut',
-                    delay: b.delay
-                  }}
-                />
-              ))}
-            </g>
-
-            {/* Measurement Lines */}
-            {[50, 100, 150].map((ml) => {
-              const y = 180 - (ml / 200) * 130;
-              return (
-                <g key={ml}>
-                  <line x1="18" y1={y} x2="26" y2={y} stroke="rgba(0,255,255,0.25)" strokeWidth="1" />
-                  <text x="10" y={y + 3} fontSize="6" fill="rgba(0,255,255,0.35)" textAnchor="end">{ml}</text>
-                </g>
-              );
-            })}
-
-            {/* Reflection */}
-            <path d="M42,55 Q44,90 35,140" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
-
-          {/* Steam */}
-          {progress > 50 && (
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-cyan-300/30"
-                  animate={{ y: [-3, -15], opacity: [0.5, 0], scale: [1, 1.3] }}
-                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.3 }}
-                />
-              ))}
-            </div>
-          )}
-        </motion.div>
+              {/* Flask Neck */}
+              <rect x="35" y="18" width="50" height="22" rx="4" fill="rgba(15,23,42,0.5)" stroke="url(#flaskStroke)" strokeWidth="2.5" />
+              
+              {/* Flask Rim */}
+              <ellipse cx="60" cy="18" rx="28" ry="5" fill="rgba(15,23,42,0.5)" stroke="url(#flaskStroke)" strokeWidth="2" />
+              
+              {/* Liquid */}
+              <ellipse
+                cx="60"
+                cy="110"
+                rx="38"
+                ry="25"
+                fill="url(#liquidFill)"
+                className="animate-[liquidWave_2s_ease-in-out_infinite]"
+              />
+              
+              {/* Liquid Surface Highlight */}
+              <ellipse
+                cx="60"
+                cy="88"
+                rx="35"
+                ry="8"
+                fill="rgba(34,211,238,0.3)"
+                className="animate-[liquidWave_2.5s_ease-in-out_infinite]"
+              />
+              
+              {/* Bubbles */}
+              <circle cx="45" cy="105" r="4" fill="url(#bubbleGrad)" className="animate-[bubble_2s_ease-in-out_infinite]" />
+              <circle cx="70" cy="98" r="3" fill="url(#bubbleGrad)" className="animate-[bubble_2s_ease-in-out_infinite_0.3s]" />
+              <circle cx="55" cy="115" r="3.5" fill="url(#bubbleGrad)" className="animate-[bubble_2s_ease-in-out_infinite_0.6s]" />
+              <circle cx="75" cy="108" r="2.5" fill="url(#bubbleGrad)" className="animate-[bubble_2s_ease-in-out_infinite_0.9s]" />
+              <circle cx="40" cy="95" r="2" fill="url(#bubbleGrad)" className="animate-[bubble_2s_ease-in-out_infinite_1.2s]" />
+              
+              {/* Glass Reflection */}
+              <path
+                d="M40,45 Q42,80 30,110"
+                fill="none"
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+        </div>
 
         {/* Title */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="text-center mb-5"
-        >
-          <h1 className="text-4xl sm:text-5xl font-bold mb-1.5 tracking-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-emerald-300">
+        <div className="text-center mb-8">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-3 tracking-tight">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-300">
               ChemLab
             </span>
           </h1>
-          <p className="text-cyan-200/60 text-sm">Virtual Chemistry Laboratory</p>
-        </motion.div>
+          <p className="text-cyan-200/60 text-base sm:text-lg tracking-wide font-light">
+            Virtual Chemistry Laboratory
+          </p>
+        </div>
 
-        {/* Progress */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="w-52 sm:w-64 mb-5"
-        >
-          <div className="h-1.5 bg-slate-700/60 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full"
-              style={{ background: 'linear-gradient(90deg, #22d3ee, #10b981)', boxShadow: '0 0 10px rgba(0,255,255,0.4)' }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.15 }}
+        {/* Progress Section */}
+        <div className="w-60 sm:w-80 mb-8">
+          {/* Progress Bar */}
+          <div className="relative h-2 bg-slate-700/60 rounded-full overflow-hidden border border-slate-600/40 shadow-inner">
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_2s_linear_infinite]" />
+            
+            {/* Progress Fill */}
+            <div 
+              className="absolute inset-y-0 left-0 rounded-full transition-all duration-300 ease-out"
+              style={{ 
+                width: `${progress}%`,
+                background: 'linear-gradient(90deg, #22d3ee, #10b981)',
+                boxShadow: '0 0 20px rgba(34,211,238,0.5)'
+              }}
             />
           </div>
-          <div className="flex justify-between mt-1.5">
-            <span className="text-cyan-400/50 text-[10px] uppercase tracking-wider">
-              {progress >= 100 ? 'Ready' : 'Loading'}
+          
+          {/* Progress Info */}
+          <div className="flex justify-between items-center mt-3">
+            <span className="text-cyan-400/50 text-xs font-medium tracking-widest uppercase">
+              {phase === 'complete' ? 'Ready' : 'Loading'}
             </span>
-            <span className="text-cyan-300 font-mono text-xs">{Math.round(progress)}%</span>
+            <span className="text-cyan-300 font-mono text-sm font-semibold tabular-nums">
+              {progress}%
+            </span>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Elements */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="flex gap-2"
-        >
+        {/* Element Symbols */}
+        <div className="flex gap-2 sm:gap-3">
           {[
-            { s: 'H', n: 1, c: '#22d3ee' },
-            { s: 'C', n: 6, c: '#10b981' },
-            { s: 'N', n: 7, c: '#8b5cf6' },
-            { s: 'O', n: 8, c: '#f43f5e' },
-            { s: 'Na', n: 11, c: '#f59e0b' },
-          ].map((el) => (
+            { symbol: 'H', number: 1, color: 'cyan' },
+            { symbol: 'He', number: 2, color: 'purple' },
+            { symbol: 'C', number: 6, color: 'emerald' },
+            { symbol: 'N', number: 7, color: 'teal' },
+            { symbol: 'O', number: 8, color: 'rose' },
+            { symbol: 'Fe', number: 26, color: 'amber' },
+          ].map((el, i) => (
             <div
-              key={el.s}
-              className="w-9 h-11 rounded-lg flex flex-col items-center justify-center border"
-              style={{ borderColor: `${el.c}40`, backgroundColor: `${el.c}10`, color: el.c }}
+              key={el.symbol}
+              className="relative group"
+              style={{ animationDelay: `${i * 0.1}s` }}
             >
-              <span className="text-sm font-bold">{el.s}</span>
-              <span className="text-[7px] opacity-50">{el.n}</span>
+              <div 
+                className={`w-10 h-12 sm:w-12 sm:h-14 rounded-lg flex flex-col items-center justify-center border transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-1`}
+                style={{
+                  borderColor: `var(--${el.color}-500)40`,
+                  backgroundColor: `var(--${el.color}-500)10`,
+                  color: `var(--${el.color}-400)`,
+                }}
+              >
+                <span className="text-sm sm:text-base font-bold">{el.symbol}</span>
+                <span className="text-[8px] sm:text-[10px] opacity-50">{el.number}</span>
+              </div>
             </div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* Dots */}
-        <div className="flex gap-1.5 mt-5">
-          {[0, 0.15, 0.3].map((d, i) => (
-            <motion.div
+        {/* Loading Dots */}
+        <div className="flex gap-2 mt-8">
+          {[0, 1, 2].map((i) => (
+            <div
               key={i}
-              className="w-1.5 h-1.5 rounded-full bg-cyan-400"
-              animate={{ scale: [0.6, 1, 0.6], opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 0.8, repeat: Infinity, delay: d }}
+              className="w-2 h-2 rounded-full bg-cyan-400"
+              style={{
+                animation: `dotPulse 1.2s ${i * 0.15}s infinite`,
+              }}
             />
           ))}
         </div>
       </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes bubble {
+          0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+          50% { transform: translateY(-12px) scale(1.2); opacity: 1; }
+        }
+        @keyframes liquidWave {
+          0%, 100% { transform: scaleX(1) scaleY(1); }
+          50% { transform: scaleX(1.02) scaleY(0.98); }
+        }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes dotPulse {
+          0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+          40% { transform: scale(1.1); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

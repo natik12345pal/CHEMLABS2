@@ -18,7 +18,6 @@ export interface WorkspaceBeaker {
   fillLevel: number;
   isAnimating: boolean;
   isCentered: boolean;
-  isExploding?: boolean;
 }
 
 export interface ReactionResult {
@@ -26,6 +25,61 @@ export interface ReactionResult {
   timestamp: number;
   beakerId: string;
 }
+
+// Dangerous chemical combinations that cause explosions
+export interface DangerousCombination {
+  chemicals: string[]; // IDs of chemicals that cause explosion when combined
+  severity: 'blast' | 'violent' | 'moderate';
+  message: string;
+}
+
+export const dangerousCombinations: DangerousCombination[] = [
+  {
+    chemicals: ['na', 'h2o'],
+    severity: 'blast',
+    message: 'Sodium + Water causes violent explosion! 💥'
+  },
+  {
+    chemicals: ['k', 'h2o'],
+    severity: 'blast',
+    message: 'Potassium + Water causes violent explosion! 💥'
+  },
+  {
+    chemicals: ['na', 'hcl'],
+    severity: 'blast',
+    message: 'Sodium + Hydrochloric Acid causes explosion! 💥'
+  },
+  {
+    chemicals: ['k', 'hcl'],
+    severity: 'blast',
+    message: 'Potassium + Hydrochloric Acid causes explosion! 💥'
+  },
+  {
+    chemicals: ['na', 'h2so4'],
+    severity: 'blast',
+    message: 'Sodium + Sulfuric Acid causes violent explosion! 💥'
+  },
+  {
+    chemicals: ['k', 'h2so4'],
+    severity: 'blast',
+    message: 'Potassium + Sulfuric Acid causes violent explosion! 💥'
+  },
+  {
+    chemicals: ['mg', 'h2o'],
+    severity: 'moderate',
+    message: 'Magnesium + Hot Water reaction! 🔥'
+  },
+  {
+    chemicals: ['ca', 'h2o'],
+    severity: 'violent',
+    message: 'Calcium + Water causes violent reaction! 💨'
+  },
+  {
+    chemicals: ['li', 'h2o'],
+    severity: 'blast',
+    message: 'Lithium + Water causes explosion! 💥'
+  }
+];
 
 export interface LabState {
   // UI State
@@ -38,14 +92,14 @@ export interface LabState {
   isFullscreen: boolean;
   isPaused: boolean;
   zoomLevel: number;
-  
+
   // Lab Workspace State
   workspaceBeakers: WorkspaceBeaker[];
   selectedBeaker: string | null;
   selectedChemical: Chemical | null;
   isDragging: boolean;
   dragItem: { type: 'beaker' | 'chemical'; data: BeakerType | Chemical } | null;
-  
+
   // Reaction State
   pendingReaction: Reaction | null;
   isMixing: boolean;
@@ -53,16 +107,20 @@ export interface LabState {
   reactionResult: ReactionResult | null;
   showReactionPanel: boolean;
   isPanelMinimized: boolean;
-  explodingBeakers: string[];
-  
+
+  // Explosion State
+  isExplosionActive: boolean;
+  explosionPosition: { x: number; y: number } | null;
+  explosionMessage: string;
+
   // Settings
   temperature: number;
   experimentName: string;
-  
+
   // Achievements
   achievements: string[];
   showAchievement: string | null;
-  
+
   // Element viewer
   selectedElement: number | null;
   
@@ -108,6 +166,11 @@ export interface LabState {
   
   // Element Actions
   setSelectedElement: (atomicNumber: number | null) => void;
+
+  // Explosion Actions
+  triggerExplosion: (position: { x: number; y: number }, message: string) => void;
+  clearExplosion: () => void;
+  checkDangerousCombination: (beakerId: string) => DangerousCombination | null;
 }
 
 export const useChemLabStore = create<LabState>()(
@@ -123,27 +186,31 @@ export const useChemLabStore = create<LabState>()(
       isFullscreen: false,
       isPaused: false,
       zoomLevel: 100,
-      
+
       workspaceBeakers: [],
       selectedBeaker: null,
       selectedChemical: null,
       isDragging: false,
       dragItem: null,
-      
+
       pendingReaction: null,
       isMixing: false,
       mixProgress: 0,
       reactionResult: null,
       showReactionPanel: false,
       isPanelMinimized: false,
-      explodingBeakers: [],
-      
+
+      // Explosion initial state
+      isExplosionActive: false,
+      explosionPosition: null,
+      explosionMessage: '',
+
       temperature: 25,
       experimentName: 'Untitled Experiment',
-      
+
       achievements: [],
       showAchievement: null,
-      
+
       selectedElement: null,
       
       // UI Actions
@@ -208,7 +275,11 @@ export const useChemLabStore = create<LabState>()(
       removeBeakerFromWorkspace: (id) => set((state) => ({
         workspaceBeakers: state.workspaceBeakers.filter((b) => b.id !== id),
         selectedBeaker: state.selectedBeaker === id ? null : state.selectedBeaker,
-        pendingReaction: null
+        pendingReaction: null,
+        // Also clear explosion state when removing beaker
+        isExplosionActive: false,
+        explosionPosition: null,
+        explosionMessage: ''
       })),
       
       selectBeaker: (id) => set({ selectedBeaker: id }),
@@ -225,10 +296,10 @@ export const useChemLabStore = create<LabState>()(
         const state = get();
         const beaker = state.workspaceBeakers.find((b) => b.id === beakerId);
         if (!beaker) return;
-        
+
         const existingContent = beaker.contents.find((c) => c.chemical.id === chemical.id);
         let newContents: WorkspaceBeaker['contents'];
-        
+
         if (existingContent) {
           newContents = beaker.contents.map((c) =>
             c.chemical.id === chemical.id
@@ -238,10 +309,10 @@ export const useChemLabStore = create<LabState>()(
         } else {
           newContents = [...beaker.contents, { chemical, quantity, temperature: state.temperature }];
         }
-        
+
         const totalQuantity = newContents.reduce((sum, c) => sum + c.quantity, 0);
         const fillLevel = Math.min(100, (totalQuantity / beaker.beakerType.capacity) * 100);
-        
+
         set({
           workspaceBeakers: state.workspaceBeakers.map((b) =>
             b.id === beakerId
@@ -249,7 +320,28 @@ export const useChemLabStore = create<LabState>()(
               : b
           )
         });
-        
+
+        // Check for dangerous combinations after adding chemical
+        const dangerousCombination = get().checkDangerousCombination(beakerId);
+        if (dangerousCombination && (dangerousCombination.severity === 'blast' || dangerousCombination.severity === 'violent')) {
+          // Calculate explosion position (center of beaker)
+          const explosionX = beaker.position.x + beaker.beakerType.width / 2;
+          const explosionY = beaker.position.y + beaker.beakerType.height / 2;
+
+          // Trigger explosion
+          get().triggerExplosion(
+            { x: explosionX, y: explosionY },
+            dangerousCombination.message
+          );
+
+          // Remove the beaker quickly after explosion
+          setTimeout(() => {
+            get().removeBeakerFromWorkspace(beakerId);
+          }, 600);
+
+          return; // Don't check for normal reaction
+        }
+
         // Check for reaction after adding chemical
         get().checkForReaction();
       },
@@ -319,61 +411,23 @@ export const useChemLabStore = create<LabState>()(
         const state = get();
         if (!state.pendingReaction || !state.selectedBeaker) return;
         
-        const reaction = state.pendingReaction;
-        const beakerId = state.selectedBeaker;
+        const result: ReactionResult = {
+          reaction: state.pendingReaction,
+          timestamp: Date.now(),
+          beakerId: state.selectedBeaker
+        };
         
-        // Check if this is an explosion reaction (Na + H2O, K + H2O)
-        const isExplosionReaction = reaction.animationType === 'explosion' && 
-          reaction.effects.some(e => e.type === 'explosion');
+        set({
+          isMixing: false,
+          mixProgress: 100,
+          pendingReaction: null,
+          reactionResult: result,
+          showReactionPanel: true,
+          isPanelMinimized: false
+        });
         
-        if (isExplosionReaction) {
-          // Mark beaker as exploding
-          set((state) => ({
-            isMixing: false,
-            mixProgress: 100,
-            pendingReaction: null,
-            explodingBeakers: [...state.explodingBeakers, beakerId],
-            workspaceBeakers: state.workspaceBeakers.map((b) =>
-              b.id === beakerId ? { ...b, isExploding: true } : b
-            )
-          }));
-          
-          // Set reaction result after explosion animation
-          setTimeout(() => {
-            const result: ReactionResult = {
-              reaction,
-              timestamp: Date.now(),
-              beakerId
-            };
-            
-            set((state) => ({
-              reactionResult: result,
-              showReactionPanel: true,
-              isPanelMinimized: false,
-              explodingBeakers: state.explodingBeakers.filter(id => id !== beakerId)
-            }));
-            
-            get().unlockAchievement('first-explosion');
-          }, 1000);
-        } else {
-          // Normal reaction
-          const result: ReactionResult = {
-            reaction,
-            timestamp: Date.now(),
-            beakerId
-          };
-          
-          set({
-            isMixing: false,
-            mixProgress: 100,
-            pendingReaction: null,
-            reactionResult: result,
-            showReactionPanel: true,
-            isPanelMinimized: false
-          });
-          
-          get().unlockAchievement('first-reaction');
-        }
+        // Unlock achievement
+        get().unlockAchievement('first-reaction');
       },
       
       dismissReactionResult: () => set({
@@ -401,8 +455,7 @@ export const useChemLabStore = create<LabState>()(
         mixProgress: 0,
         reactionResult: null,
         showReactionPanel: false,
-        temperature: 25,
-        explodingBeakers: []
+        temperature: 25
       }),
       
       saveExperiment: () => {
@@ -433,7 +486,42 @@ export const useChemLabStore = create<LabState>()(
       clearAchievement: () => set({ showAchievement: null }),
       
       // Element Actions
-      setSelectedElement: (atomicNumber) => set({ selectedElement: atomicNumber })
+      setSelectedElement: (atomicNumber) => set({ selectedElement: atomicNumber }),
+
+      // Explosion Actions
+      triggerExplosion: (position, message) => {
+        set({
+          isExplosionActive: true,
+          explosionPosition: position,
+          explosionMessage: message
+        });
+      },
+
+      clearExplosion: () => {
+        set({
+          isExplosionActive: false,
+          explosionPosition: null,
+          explosionMessage: ''
+        });
+      },
+
+      checkDangerousCombination: (beakerId) => {
+        const state = get();
+        const beaker = state.workspaceBeakers.find(b => b.id === beakerId);
+        if (!beaker || beaker.contents.length < 1) return null;
+
+        const chemicalIds = beaker.contents.map(c => c.chemical.id);
+
+        for (const combination of dangerousCombinations) {
+          const hasAllChemicals = combination.chemicals.every(chemId =>
+            chemicalIds.includes(chemId)
+          );
+          if (hasAllChemicals) {
+            return combination;
+          }
+        }
+        return null;
+      }
     }),
     {
       name: 'chemlab-storage',

@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useChemLabStore } from '@/store/chemlab-store';
 import { chemicals, Chemical } from '@/data/chemicals';
 import { beakerTypes } from '@/data/beakers';
-import { 
-  FlaskConical, 
+import {
+  FlaskConical,
   Thermometer,
   Play,
   Pause,
@@ -20,6 +20,9 @@ import BeakerComponent from './BeakerComponent';
 import MixButton, { MixingProgress } from './MixButton';
 import ReactionDetailsPanel from './ReactionDetailsPanel';
 import { useSoundEffects } from './SoundEffects';
+import PourButton from './PourButton';
+import TapDispenser from './TapDispenser';
+import ExplosionOverlay from './ExplosionOverlay';
 
 export default function LabWorkspace() {
   const {
@@ -37,17 +40,21 @@ export default function LabWorkspace() {
     togglePause,
     isLowPerformanceMode,
     isMixing,
+    mixProgress,
     pendingReaction,
-    explodingBeakers
+    isExplosionActive,
+    explosionPosition,
+    clearExplosion
   } = useChemLabStore();
 
-  const { playPour, playDrop } = useSoundEffects();
+  const { playPour } = useSoundEffects();
 
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [workspaceSize, setWorkspaceSize] = useState({ width: 800, height: 600 });
   const [showChemicalPanel, setShowChemicalPanel] = useState(true);
   const [showBeakerPanel, setShowBeakerPanel] = useState(true);
   const [quantity, setQuantity] = useState(10);
+  const [isPouring, setIsPouring] = useState(false);
 
   // Update workspace size on mount and resize
   useEffect(() => {
@@ -68,21 +75,16 @@ export default function LabWorkspace() {
     addBeakerToWorkspace(beakerType, workspaceSize);
   }, [addBeakerToWorkspace, workspaceSize]);
 
-  // Handle adding chemical with sound (different sounds for liquid vs solid)
+  // Handle adding chemical with sound
   const handleAddChemical = useCallback((beakerId: string, chemical: Chemical, qty: number) => {
     addChemicalToBeaker(beakerId, chemical, qty);
-    // Different sound for liquids vs solids
-    const isLiquid = chemical.state === 'liquid' || (chemical.state === 'gas' && chemical.id !== 'cl2');
-    const isSolid = chemical.state === 'solid' || chemical.type === 'metal' || chemical.state === 'metal';
-    
-    if (isLiquid) {
-      playPour();
-    } else if (isSolid) {
-      playDrop();
-    } else {
-      playPour();
-    }
-  }, [addChemicalToBeaker, playPour, playDrop]);
+    playPour();
+  }, [addChemicalToBeaker, playPour]);
+
+  // Handle pouring state change
+  const handlePouringChange = useCallback((pouring: boolean) => {
+    setIsPouring(pouring);
+  }, []);
 
   // Chemical categories
   const chemicalCategories = [
@@ -173,8 +175,9 @@ export default function LabWorkspace() {
                 selectedChemical={selectedChemical}
                 quantity={quantity}
                 workspaceSize={workspaceSize}
-                isMixing={isMixing}
-                isExploding={explodingBeakers.includes(beaker.id)}
+                isMixing={isMixing && selectedBeaker === beaker.id}
+                mixProgress={mixProgress}
+                reactionColor={pendingReaction?.colorChange?.to}
               />
             ))}
           </AnimatePresence>
@@ -202,7 +205,23 @@ export default function LabWorkspace() {
             </motion.div>
           )}
 
-          {/* Chemical addition buttons are now in BeakerComponent for better UX */}
+          {/* Tap Dispenser - Visual element above beaker */}
+          <TapDispenser
+            selectedBeaker={workspaceBeakers.find(b => b.id === selectedBeaker) || null}
+            selectedChemical={selectedChemical}
+            isMixing={isMixing}
+            isPouring={isPouring}
+          />
+
+          {/* Pour Button - Shows when chemical and beaker are selected */}
+          <PourButton
+            selectedBeaker={workspaceBeakers.find(b => b.id === selectedBeaker) || null}
+            selectedChemical={selectedChemical}
+            onAddChemical={handleAddChemical}
+            isMixing={isMixing}
+            quantity={quantity}
+            onPouringChange={handlePouringChange}
+          />
 
           {/* Pending Reaction Indicator */}
           {pendingReaction && !isMixing && (
@@ -351,16 +370,9 @@ export default function LabWorkspace() {
                 <X size={14} />
               </button>
             </div>
-            {selectedBeaker && selectedChemical && (
+            {selectedBeaker && (
               <p className="text-[10px] text-emerald-400 mt-2 text-center">
-                {selectedChemical.state === 'liquid' || (selectedChemical.state === 'gas' && selectedChemical.id !== 'cl2')
-                  ? 'Hold the button to pour'
-                  : 'Tap Add button to drop'}
-              </p>
-            )}
-            {selectedChemical && !selectedBeaker && (
-              <p className="text-[10px] text-amber-400 mt-2 text-center">
-                Select a beaker first
+                Tap "Add" button to fill beaker
               </p>
             )}
           </motion.div>
@@ -375,6 +387,13 @@ export default function LabWorkspace() {
 
       {/* Reaction Details */}
       <ReactionDetailsPanel />
+
+      {/* Explosion Overlay */}
+      <ExplosionOverlay
+        isActive={isExplosionActive}
+        onComplete={clearExplosion}
+        position={explosionPosition || undefined}
+      />
     </div>
   );
 }
