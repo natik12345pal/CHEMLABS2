@@ -321,28 +321,42 @@ export default function LabWorkspace() {
                     {category.name}
                   </h4>
                   <div className="grid grid-cols-2 gap-1">
-                    {categoryChemicals.map((chemical) => (
-                      <motion.button
-                        key={chemical.id}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => selectChemical(selectedChemical?.id === chemical.id ? null : chemical)}
-                        className={`p-2 rounded-xl border transition-all text-left touch-manipulation ${
-                          selectedChemical?.id === chemical.id
-                            ? 'bg-cyan-500/25 border-cyan-400/60 shadow-sm shadow-cyan-500/20'
-                            : 'bg-slate-700/30 border-transparent hover:border-cyan-500/30'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1 mb-0.5">
-                          <span className="text-sm">{chemical.icon}</span>
-                          <span className="text-[11px] text-slate-200 font-medium truncate">{chemical.formula}</span>
-                        </div>
-                        {/* Hazard dot */}
-                        <div className={`h-1 w-4 rounded-full mt-1 ${
-                          chemical.hazard === 'dangerous' ? 'bg-red-500' :
-                          chemical.hazard === 'caution' ? 'bg-yellow-500' : 'bg-emerald-500'
-                        }`} />
-                      </motion.button>
-                    ))}
+                    {categoryChemicals.map((chemical) => {
+                      // Extract color for preview
+                      const colorMatch = chemical.liquidColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                      const previewColor = colorMatch 
+                        ? `rgb(${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]})`
+                        : chemical.color;
+                      
+                      return (
+                        <motion.button
+                          key={chemical.id}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => selectChemical(selectedChemical?.id === chemical.id ? null : chemical)}
+                          className={`p-2 rounded-xl border transition-all text-left touch-manipulation ${
+                            selectedChemical?.id === chemical.id
+                              ? 'bg-cyan-500/25 border-cyan-400/60 shadow-sm shadow-cyan-500/20'
+                              : 'bg-slate-700/30 border-transparent hover:border-cyan-500/30'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-sm">{chemical.icon}</span>
+                            <span className="text-[11px] text-slate-200 font-medium truncate">{chemical.formula}</span>
+                          </div>
+                          {/* Color preview strip + Hazard indicator */}
+                          <div className="flex items-center gap-1 mt-1">
+                            <div 
+                              className="h-1.5 flex-1 rounded-full"
+                              style={{ backgroundColor: previewColor, opacity: 0.8 }}
+                            />
+                            <div className={`h-1.5 w-1.5 rounded-full ${
+                              chemical.hazard === 'dangerous' ? 'bg-red-500' :
+                              chemical.hazard === 'caution' ? 'bg-yellow-500' : 'bg-emerald-500'
+                            }`} />
+                          </div>
+                        </motion.button>
+                      );
+                    })}
                   </div>
                 </div>
               );

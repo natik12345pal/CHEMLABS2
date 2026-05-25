@@ -182,31 +182,111 @@ export default function BeakerComponent({
   // Sort liquids by density
   const sortedLiquids = useMemo(() => [...liquids].sort((a, b) => b.chemical.density - a.chemical.density), [liquids]);
 
+  // Helper function to extract rgba from linear-gradient or use as-is
+  const extractRgbaColor = (colorStr: string): { r: number; g: number; b: number; a: number } | null => {
+    // Try to match direct rgba first
+    const rgbaMatch = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+    if (rgbaMatch) {
+      return {
+        r: parseInt(rgbaMatch[1]),
+        g: parseInt(rgbaMatch[2]),
+        b: parseInt(rgbaMatch[3]),
+        a: rgbaMatch[4] ? parseFloat(rgbaMatch[4]) : 1
+      };
+    }
+    
+    // Try to extract from linear-gradient (get all colors)
+    const gradientColors = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/g);
+    if (gradientColors && gradientColors.length > 0) {
+      // Use the middle/average color
+      const midIndex = Math.floor(gradientColors.length / 2);
+      const match = gradientColors[midIndex].match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+      if (match) {
+        return {
+          r: parseInt(match[1]),
+          g: parseInt(match[2]),
+          b: parseInt(match[3]),
+          a: parseFloat(match[4])
+        };
+      }
+    }
+    
+    // Fallback: try to find any rgba in the string
+    const anyRgba = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+    if (anyRgba) {
+      return {
+        r: parseInt(anyRgba[1]),
+        g: parseInt(anyRgba[2]),
+        b: parseInt(anyRgba[3]),
+        a: anyRgba[4] ? parseFloat(anyRgba[4]) : 1
+      };
+    }
+    
+    return null;
+  };
+
+  // Get solid color for SVG fill (SVG doesn't support CSS gradients in fill)
+  const getSolidColor = (colorStr: string): string => {
+    const rgba = extractRgbaColor(colorStr);
+    if (rgba) {
+      return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`;
+    }
+    return 'rgba(200, 230, 240, 0.5)';
+  };
+
+  // Get gradient colors for SVG gradient definition
+  const getGradientColors = (colorStr: string): { top: string; mid: string; bottom: string } => {
+    const colors = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/g);
+    if (colors && colors.length >= 3) {
+      return { top: colors[0], mid: colors[1], bottom: colors[2] };
+    }
+    if (colors && colors.length === 2) {
+      return { top: colors[0], mid: colors[0], bottom: colors[1] };
+    }
+    if (colors && colors.length === 1) {
+      return { top: colors[0], mid: colors[0], bottom: colors[0] };
+    }
+    const solid = getSolidColor(colorStr);
+    return { top: solid, mid: solid, bottom: solid };
+  };
+
   // Calculate blended color during mixing
   const blendedColor = useMemo(() => {
     if (liquids.length === 0) return null;
     if (reactionColor) return reactionColor;
     
-    // Simple color blending
-    if (liquids.length === 1) return liquids[0].chemical.liquidColor;
+    // Single chemical - extract solid color for SVG
+    if (liquids.length === 1) return getSolidColor(liquids[0].chemical.liquidColor);
     
-    // For mixing, blend colors
+    // For mixing, blend colors using extracted rgba values
     let r = 0, g = 0, b = 0, a = 0;
+    let validColors = 0;
+    
     liquids.forEach(content => {
       const color = content.chemical.liquidColor;
-      // Parse rgba
-      const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-      if (match) {
-        r += parseInt(match[1]) * content.quantity;
-        g += parseInt(match[2]) * content.quantity;
-        b += parseInt(match[3]) * content.quantity;
-        a += (match[4] ? parseFloat(match[4]) : 1) * content.quantity;
+      const rgba = extractRgbaColor(color);
+      if (rgba) {
+        r += rgba.r * content.quantity;
+        g += rgba.g * content.quantity;
+        b += rgba.b * content.quantity;
+        a += rgba.a * content.quantity;
+        validColors++;
       }
     });
+    
+    if (validColors === 0) return 'rgba(200, 230, 240, 0.5)';
     
     const total = totalLiquidVolume;
     return `rgba(${Math.round(r/total)}, ${Math.round(g/total)}, ${Math.round(b/total)}, ${(a/total).toFixed(2)})`;
   }, [liquids, totalLiquidVolume, reactionColor]);
+
+  // Get gradient colors for single liquid (for more realistic look)
+  const liquidGradientColors = useMemo(() => {
+    if (liquids.length === 1 && !reactionColor) {
+      return getGradientColors(liquids[0].chemical.liquidColor);
+    }
+    return null;
+  }, [liquids, reactionColor]);
 
   const fillPercent = beaker.fillLevel;
 
@@ -263,7 +343,16 @@ export default function BeakerComponent({
                 <stop offset="100%" stopColor="rgba(255,255,255,0.4)" />
               </linearGradient>
 
-              {/* Liquid Gradient for depth */}
+              {/* Dynamic Liquid Color Gradient - for single liquids with realistic depth */}
+              {liquidGradientColors && (
+                <linearGradient id={`chemGradient-${beaker.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={liquidGradientColors.top} />
+                  <stop offset="50%" stopColor={liquidGradientColors.mid} />
+                  <stop offset="100%" stopColor={liquidGradientColors.bottom} />
+                </linearGradient>
+              )}
+
+              {/* Liquid Gradient for depth overlay */}
               <linearGradient id={`liquidGradient-${beaker.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
                 <stop offset="30%" stopColor="rgba(255,255,255,0.05)" />
@@ -328,13 +417,15 @@ export default function BeakerComponent({
             {/* Liquids - Realistic rendering with depth */}
             {liquids.length > 0 && (
               <g clipPath={`url(#liquidClip-${beaker.id})`}>
-                {/* Main liquid body */}
+                {/* Main liquid body - use gradient for single liquid, solid for mixed */}
                 <motion.rect
                   x={liquidArea.x}
                   y={liquidArea.y + liquidArea.height - liquidHeight}
                   width={liquidArea.width}
                   height={liquidHeight}
-                  fill={blendedColor || 'rgba(200, 230, 240, 0.5)'}
+                  fill={liquidGradientColors 
+                    ? `url(#chemGradient-${beaker.id})` 
+                    : (blendedColor || 'rgba(200, 230, 240, 0.5)')}
                   initial={{ height: 0, y: liquidArea.y + liquidArea.height }}
                   animate={{ 
                     height: liquidHeight, 
